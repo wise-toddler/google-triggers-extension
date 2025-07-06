@@ -40,9 +40,19 @@ function activate(context) {
             await treeDataProvider.triggerBuild(trigger);
         }),
         
-        vscode.commands.registerCommand('googleCloudBuild.configureSubstitutions', async (trigger) => {
-            console.log('⚙️ Configuring substitutions for:', trigger.label);
-            await treeDataProvider.configureSubstitutions(trigger);
+        vscode.commands.registerCommand('googleCloudBuild.addSubstitution', async (trigger) => {
+            console.log('➕ Adding substitution for:', trigger.label);
+            await treeDataProvider.addSubstitution(trigger);
+        }),
+        
+        vscode.commands.registerCommand('googleCloudBuild.editSubstitution', async (substitution) => {
+            console.log('✏️ Editing substitution:', substitution.label);
+            await treeDataProvider.editSubstitution(substitution);
+        }),
+        
+        vscode.commands.registerCommand('googleCloudBuild.deleteSubstitution', async (substitution) => {
+            console.log('🗑️ Deleting substitution:', substitution.label);
+            await treeDataProvider.deleteSubstitution(substitution);
         }),
         
         vscode.commands.registerCommand('googleCloudBuild.openWebPanel', async () => {
