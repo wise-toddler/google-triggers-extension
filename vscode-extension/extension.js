@@ -282,21 +282,37 @@ class GoogleCloudBuildTreeDataProvider {
         if (!this.selectedProject) return;
 
         try {
-            vscode.window.showInformationMessage('Loading build triggers...');
-            const { stdout } = await execAsync(`gcloud builds triggers list --project=${this.selectedProject} --format=json`);
-            this.triggers = JSON.parse(stdout).map(t => ({
+            vscode.window.showInformationMessage(`Loading build triggers for ${this.selectedRegion}...`);
+            
+            let command = `gcloud builds triggers list --project=${this.selectedProject} --format=json`;
+            
+            // Add region parameter if not global
+            if (this.selectedRegion && this.selectedRegion !== 'global') {
+                command += ` --region=${this.selectedRegion}`;
+            }
+            
+            console.log('🔧 Loading triggers with command:', command);
+            
+            const { stdout } = await execAsync(command);
+            const triggersData = JSON.parse(stdout);
+            
+            this.triggers = triggersData.map(t => ({
                 id: t.id,
                 name: t.name,
                 description: t.description || '',
                 github_repo: t.github?.name || null,
                 branch: t.github?.push?.branch || null,
-                disabled: t.disabled || false
+                disabled: t.disabled || false,
+                region: this.selectedRegion
             }));
             
-            vscode.window.showInformationMessage(`✅ Loaded ${this.triggers.length} build triggers`);
+            const regionName = this.regions.find(r => r.id === this.selectedRegion)?.name || this.selectedRegion;
+            vscode.window.showInformationMessage(`✅ Loaded ${this.triggers.length} build triggers from ${regionName}`);
+            
         } catch (error) {
             console.error('Failed to load triggers:', error);
             vscode.window.showErrorMessage(`Failed to load triggers: ${error.message}`);
+            this.triggers = []; // Clear triggers on error
         }
     }
 
