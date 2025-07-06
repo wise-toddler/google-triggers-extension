@@ -575,6 +575,7 @@ class GoogleCloudBuildTreeDataProvider {
         }
         this.substitutions[triggerId][key] = value;
 
+        this.saveState();
         vscode.window.showInformationMessage(`✅ Added substitution: ${key} = ${value}`);
         this.refresh();
     }
