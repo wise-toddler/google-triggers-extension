@@ -43,6 +43,14 @@ class StateManager {
         await this.context.globalState.update(STORAGE_KEYS.SUBSTITUTIONS, substitutions);
     }
 
+    async savePinnedTriggers(pinnedTriggers) {
+        await this.context.globalState.update(STORAGE_KEYS.PINNED_TRIGGERS, pinnedTriggers);
+    }
+
+    getPinnedTriggers() {
+        return this.context.globalState.get(STORAGE_KEYS.PINNED_TRIGGERS, []);
+    }
+
     // Clear all saved state
     async clearState() {
         await this.context.globalState.update(STORAGE_KEYS.SELECTED_PROJECT, undefined);
