@@ -7,7 +7,7 @@ function activate(context) {
     console.log('🚀 Google Cloud Build Extension v2.0 - TreeView Approach');
     
     // Create tree data provider
-    const treeDataProvider = new GoogleCloudBuildTreeDataProvider();
+    const treeDataProvider = new GoogleCloudBuildTreeDataProvider(context);
     
     // Register tree data provider
     vscode.window.registerTreeDataProvider('googleCloudBuildTree', treeDataProvider);
