@@ -42,9 +42,19 @@
         "icon": "$(play)"
       },
       {
-        "command": "googleCloudBuild.configureSubstitutions",
-        "title": "Configure Substitutions",
-        "icon": "$(settings-gear)"
+        "command": "googleCloudBuild.editSubstitution",
+        "title": "Edit Value",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "googleCloudBuild.addSubstitution",
+        "title": "Add Substitution",
+        "icon": "$(add)"
+      },
+      {
+        "command": "googleCloudBuild.deleteSubstitution",
+        "title": "Delete",
+        "icon": "$(trash)"
       },
       {
         "command": "googleCloudBuild.openWebPanel",
