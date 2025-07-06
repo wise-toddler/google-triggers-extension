@@ -1,45 +1,41 @@
 {
   "name": "google-cloud-build-extension",
-  "displayName": "Google Cloud Build DEBUG",
-  "description": "Debug version - Manage Google Cloud Build triggers directly from VSCode",
-  "version": "1.0.1",
+  "displayName": "Google Cloud Build",
+  "description": "Manage Google Cloud Build triggers directly from VSCode",
+  "version": "1.0.0",
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.74.0"
   },
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onCommand:googleCloudBuild.openPanel"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
         "command": "googleCloudBuild.refresh",
-        "title": "Refresh Google Cloud Build",
+        "title": "Refresh",
         "icon": "$(refresh)"
-      },
-      {
-        "command": "googleCloudBuild.debug",
-        "title": "Debug Google Cloud Build Extension"
       }
     ],
+    "views": {
+      "googleCloudBuild": [
+        {
+          "id": "googleCloudBuildView",
+          "name": "Triggers",
+          "when": "true"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {
           "id": "googleCloudBuild",
           "title": "Google Cloud Build",
           "icon": "$(cloud)"
-        }
-      ]
-    },
-    "views": {
-      "googleCloudBuild": [
-        {
-          "id": "googleCloudBuildView",
-          "name": "Cloud Build Triggers",
-          "when": "true"
         }
       ]
     },
@@ -59,7 +55,7 @@
     "test": "node ./test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.60.0",
+    "@types/vscode": "^1.74.0",
     "@types/node": "16.x",
     "@vscode/test-electron": "^2.2.0",
     "eslint": "^8.28.0",
