@@ -53,6 +53,16 @@
         "icon": "$(trash)"
       },
       {
+        "command": "googleCloudBuild.togglePin",
+        "title": "Toggle Pin",
+        "icon": "$(pin)"
+      },
+      {
+        "command": "googleCloudBuild.clearAllPins",
+        "title": "Clear All Pins",
+        "icon": "$(clear-all)"
+      },
+      {
         "command": "googleCloudBuild.openWebPanel",
         "title": "Open Build Panel",
         "icon": "$(browser)"
