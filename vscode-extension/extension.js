@@ -30,6 +30,11 @@ function activate(context) {
             await treeDataProvider.selectRegion();
         }),
         
+        vscode.commands.registerCommand('googleCloudBuild.selectProject', async () => {
+            console.log('📂 Selecting project');
+            await treeDataProvider.selectProject();
+        }),
+        
         vscode.commands.registerCommand('googleCloudBuild.triggerBuild', async (trigger) => {
             console.log('⚡ Triggering build for:', trigger.label);
             await treeDataProvider.triggerBuild(trigger);
