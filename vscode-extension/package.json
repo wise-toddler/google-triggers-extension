@@ -3,7 +3,7 @@
   "name": "google-cloud-build-extension",
   "displayName": "Google Cloud Build Triggers",
   "description": "Manage Google Cloud Build triggers directly from Cursor/VSCode",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "engines": {
     "vscode": "^1.60.0"
   },
