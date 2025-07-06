@@ -387,6 +387,8 @@ class GoogleCloudBuildTreeDataProvider {
             this.refresh();
         }
     }
+
+    async triggerBuild(trigger) {
         if (!this.selectedProject || !trigger) return;
 
         const regionName = this.regions.find(r => r.id === this.selectedRegion)?.name || this.selectedRegion;
