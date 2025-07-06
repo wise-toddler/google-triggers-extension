@@ -28,6 +28,7 @@ class GoogleCloudBuildViewProvider {
 
     constructor(extensionUri) {
         this._extensionUri = extensionUri;
+        this._view = undefined;
     }
 
     resolveWebviewView(webviewView, context, _token) {
@@ -39,6 +40,9 @@ class GoogleCloudBuildViewProvider {
         };
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        
+        // Initial auth check
+        this.checkAuthStatus(webviewView.webview);
 
         // Handle messages from the webview
         webviewView.webview.onDidReceiveMessage(
