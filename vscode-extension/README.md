@@ -1,113 +1,111 @@
-# Google Cloud Build VSCode Extension
+# Google Cloud Build Extension v3.0
 
-This extension allows you to manage Google Cloud Build triggers directly from VSCode without switching to the Google Cloud Console.
+A comprehensive VSCode/Cursor extension for managing Google Cloud Build triggers with a clean, modular architecture.
 
-## Features
+## ✨ Features
 
-- **Authentication Integration**: Automatically detects gcloud CLI authentication status
-- **Project Management**: Browse and select from your Google Cloud projects
-- **Region Selection**: Choose the appropriate Google Cloud region for your builds
-- **Trigger Management**: View and manage Cloud Build triggers
-- **Custom Substitutions**: Add custom substitution variables to your builds
-- **Build Execution**: Execute triggers directly from VSCode
-- **Build History**: View recent builds and their status
+- 🔐 **Authentication Management** - Check and manage gcloud authentication
+- 📂 **Project Selection** - Browse and select Google Cloud projects
+- 🌍 **Region Selection** - Support for 18+ Google Cloud regions
+- 🌿 **Branch Selection** - Common branches + custom branch input
+- 🎯 **Build Triggers** - One-click trigger execution
+- ⚙️ **Substitutions Management** - Tree-view substitutions editor
+- 💾 **Persistent Storage** - Remembers settings across restarts
+- 🌳 **Tree View Interface** - Clean, organized tree structure
 
-## Prerequisites
+## 🚀 Quick Start
 
-1. **Google Cloud SDK (gcloud CLI)** must be installed on your system
-2. **Authentication**: You must be authenticated with Google Cloud
-3. **Project Access**: You need appropriate permissions to Cloud Build in your Google Cloud projects
+1. **Install Extension**: Load the `.vsix` file
+2. **Authenticate**: Run `gcloud auth application-default login`
+3. **Open Tree View**: Click Google Cloud Build icon in Activity Bar
+4. **Select Project & Region**: Use the tree interface
+5. **Trigger Builds**: Expand triggers and click "▶️ Trigger Build"
 
-## Installation
+## 🏗️ Architecture (v3.0)
 
-1. Download the extension package (.zip file)
-2. Open VSCode
-3. Go to Extensions view (Ctrl+Shift+X)
-4. Click on "..." menu and select "Install from VSIX..."
-5. Select the downloaded .zip file
+### Modular Components:
+- **`constants.js`** - Configuration, regions, defaults
+- **`stateManager.js`** - Persistent storage operations  
+- **`gcloudService.js`** - Google Cloud CLI interactions
+- **`treeDataProvider.js`** - Tree view rendering logic
+- **`commandHandlers.js`** - User interaction handling
+- **`extension.js`** - Clean entry point
 
-## Setup
+### Benefits:
+- **Single Responsibility** - Each module has one purpose
+- **Easy Testing** - Modules can be tested independently
+- **Better Maintainability** - Clean separation of concerns
+- **Improved Error Handling** - Isolated error boundaries
 
-1. Install and configure the Google Cloud SDK:
-   ```bash
-   # Install gcloud CLI (if not already installed)
-   # Follow instructions at: https://cloud.google.com/sdk/docs/install
-   
-   # Authenticate with Google Cloud
-   gcloud auth application-default login
-   
-   # Set your default project (optional)
-   gcloud config set project YOUR_PROJECT_ID
-   ```
+## 🎮 Usage
 
-2. Open VSCode and look for the "Google Cloud Build" section in the Explorer sidebar
+### Tree Structure:
+```
+🔒 Authentication Status
+📂 Project: my-project
+🌍 Region: US Central 1  
+🌿 Branch: main
+🎯 Build Triggers (3)
+├── 📦 app-trigger
+│   ├── ▶️ Trigger Build
+│   ├── _ENV = staging (modified)
+│   ├── _VERSION = 1.0.0 (custom)
+│   └── ➕ Add Substitution
+```
 
-## Usage
+### Substitutions:
+- **Default values** show from trigger config
+- **Modified defaults** marked as "(modified)"
+- **Custom variables** marked as "(custom)"
+- **Edit inline** by clicking edit icon
+- **Add/Delete** via context menu
 
-### 1. Authentication
-- The extension will automatically check if you're authenticated with gcloud
-- If not authenticated, you'll see instructions to run: `gcloud auth application-default login`
+## 🌍 Supported Regions
 
-### 2. Project Selection
-- Select your Google Cloud project from the dropdown
-- The extension will load available Cloud Build triggers for the selected project
+- **Global** (default)
+- **US**: central1, east1, east4, west1-4
+- **Europe**: west1-6 (Belgium, London, Frankfurt...)
+- **Asia**: east1, northeast1, southeast1, south1
+- **Australia**: southeast1
 
-### 3. Region Selection
-- Choose the appropriate Google Cloud region
-- Most triggers work with the "Global" region, but some may require specific regions
+## 🔧 Development
 
-### 4. Trigger Management
-- View all available Cloud Build triggers in your project
-- Triggers are displayed with their names and status (enabled/disabled)
+### Building:
+```bash
+npm install -g vsce
+vsce package
+```
 
-### 5. Build Execution
-- Select a trigger from the dropdown
-- Optionally modify the branch name (defaults to "main")
-- Add custom substitution variables if needed
-- Click "Execute Trigger" to start the build
+### File Structure:
+```
+src/
+├── constants.js        # Config & constants
+├── stateManager.js     # Storage management
+├── gcloudService.js    # GCloud interactions
+├── treeDataProvider.js # Tree view logic
+└── commandHandlers.js  # Command handling
+```
 
-### 6. Substitution Variables
-- Click "+ Add Substitution" to add custom variables
-- Enter the variable name (e.g., `_ENVIRONMENT`) and value (e.g., `production`)
-- These variables will be passed to your Cloud Build configuration
+## 📋 Requirements
 
-### 7. Build History
-- View recent builds in the table below
-- See build status, creation time, and other details
-- Click on log URLs to view detailed build logs in the Google Cloud Console
+- VSCode or Cursor IDE
+- Google Cloud CLI (gcloud)
+- Authenticated Google Cloud account
+- Node.js (for development)
 
-## Commands
+## 🎯 Use Cases
 
-- `Google Cloud Build: Open Panel` - Opens the main Google Cloud Build panel
+- **CI/CD Automation** - Trigger builds from IDE
+- **Development Testing** - Quick builds with custom parameters
+- **Multi-Project Workflow** - Easy project switching
+- **Region Management** - Deploy to specific regions
+- **Parameter Experimentation** - Test different substitutions
 
-## Configuration
+## 📈 Version History
 
-The extension uses the gcloud CLI configuration from your system. No additional VSCode settings are required.
+- **v3.0.0** - Modular architecture, improved reliability
+- **v2.4.0** - Branch selection + persistent storage  
+- **v2.3.0** - Tree-based substitutions management
+- **v2.0.0** - TreeDataProvider (Cursor compatibility fix)
 
-## Troubleshooting
-
-### Authentication Issues
-- Make sure gcloud CLI is installed and in your PATH
-- Run `gcloud auth application-default login` to authenticate
-- Verify your authentication with `gcloud auth list`
-
-### Permission Issues
-- Ensure you have the necessary Cloud Build permissions in your Google Cloud project
-- Required roles: `Cloud Build Editor` or `Cloud Build Viewer` (for read-only access)
-
-### Trigger Not Found
-- Verify the trigger exists in the selected project and region
-- Some triggers may be region-specific
-
-### Build Execution Fails
-- Check that the trigger is enabled
-- Verify your branch name is correct
-- Ensure all required substitution variables are provided
-
-## Support
-
-For issues and feature requests, please check the extension's repository or contact the maintainer.
-
-## License
-
-This extension is provided as-is for educational and development purposes.
+Built for developers who want seamless Google Cloud Build integration! 🚀
