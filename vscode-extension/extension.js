@@ -433,6 +433,7 @@ class GoogleCloudBuildTreeDataProvider {
 
         if (selected) {
             this.selectedProject = selected.project.id;
+            this.saveState();
             vscode.window.showInformationMessage(`Selected project: ${selected.project.name}`);
             await this.loadTriggers();
             this.refresh();
