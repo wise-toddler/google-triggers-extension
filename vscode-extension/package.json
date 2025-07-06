@@ -1,4 +1,5 @@
 {
+  "publisher": "google-cloud-build",
   "name": "google-cloud-build-extension",
   "displayName": "Google Cloud Build DEBUG",
   "description": "Debug version - Manage Google Cloud Build triggers directly from VSCode",
@@ -9,9 +10,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "*"
-  ],
+  "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
     "commands": [
