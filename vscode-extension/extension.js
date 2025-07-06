@@ -122,6 +122,10 @@ class GoogleCloudBuildTreeDataProvider {
             return this.getTriggerItems();
         }
         
+        if (element.contextValue === 'trigger') {
+            return this.getSubstitutionItems(element.triggerId);
+        }
+        
         return [];
     }
 
