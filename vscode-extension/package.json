@@ -22,10 +22,10 @@
       }
     ],
     "views": {
-      "explorer": [
+      "googleCloudBuild": [
         {
           "id": "googleCloudBuildView",
-          "name": "Google Cloud Build",
+          "name": "Triggers",
           "when": "true"
         }
       ]
