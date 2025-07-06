@@ -35,6 +35,16 @@ function activate(context) {
             console.log(`📂 Restored project: ${treeDataProvider.selectedProject}`);
             console.log(`🌍 Restored region: ${treeDataProvider.selectedRegion}`);
             console.log(`🌿 Restored branch: ${treeDataProvider.selectedBranch}`);
+            
+            // Auto-check authentication and load triggers if project was restored
+            setTimeout(async () => {
+                try {
+                    console.log('🔄 Auto-checking authentication on startup...');
+                    await commandHandlers.handleCheckAuth();
+                } catch (error) {
+                    console.error('Failed to auto-check authentication on startup:', error);
+                }
+            }, 1000); // Small delay to let VSCode finish loading
         }
         
     } catch (error) {
