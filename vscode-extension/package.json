@@ -124,6 +124,16 @@
           "command": "googleCloudBuild.deleteSubstitution",
           "when": "view == googleCloudBuildTree && viewItem == substitution",
           "group": "context"
+        },
+        {
+          "command": "googleCloudBuild.togglePin",
+          "when": "view == googleCloudBuildTree && viewItem == trigger",
+          "group": "inline"
+        },
+        {
+          "command": "googleCloudBuild.clearAllPins",
+          "when": "view == googleCloudBuildTree && viewItem == triggersGroup",
+          "group": "context"
         }
       ]
     }
