@@ -399,6 +399,7 @@ class GoogleCloudBuildTreeDataProvider {
 
         if (selected) {
             this.selectedRegion = selected.region.id;
+            this.saveState();
             vscode.window.showInformationMessage(`Selected region: ${selected.region.name}`);
             
             // Reload triggers for the new region if project is selected
