@@ -13,6 +13,14 @@ A comprehensive VSCode/Cursor extension for managing Google Cloud Build triggers
 - 💾 **Persistent Storage** - Remembers settings across restarts
 - 🌳 **Tree View Interface** - Clean, organized tree structure
 
+## 📦 Installation
+
+Install the extension package:
+
+```bash
+code --install-extension ./google-cloud-build-extension-4.1.0.vsix
+```
+
 ## 🚀 Quick Start
 
 1. **Install Extension**: Load the `.vsix` file
