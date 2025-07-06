@@ -1,15 +1,35 @@
 {
   "publisher": "google-cloud-build",
   "name": "google-cloud-build-extension",
-  "displayName": "Google Cloud Build Triggers v4.0 - Pin & Organize",
-  "description": "Modular Google Cloud Build triggers manager for Cursor/VSCode",
+  "displayName": "Google Cloud Build Triggers - Pin & Organize",
+  "description": "Manage Google Cloud Build triggers directly from VSCode/Cursor with pinning, auto-sync, and multi-region support",
   "version": "4.1.0",
   "engines": {
     "vscode": "^1.60.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Extension Packs"
   ],
+  "keywords": [
+    "google-cloud",
+    "cloud-build",
+    "gcp",
+    "triggers",
+    "ci-cd",
+    "devops",
+    "automation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/google-cloud-build-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/google-cloud-build-extension/issues"
+  },
+  "homepage": "https://github.com/yourusername/google-cloud-build-extension#readme",
+  "license": "MIT",
+  "icon": "icon.png",
   "activationEvents": [
     "onStartupFinished"
   ],
