@@ -106,6 +106,9 @@ class CommandHandlers {
             if (selected) {
                 await this.treeDataProvider.setSelectedProject(selected.project.id);
                 vscode.window.showInformationMessage(`Selected project: ${selected.project.name}`);
+                
+                // Auto-load triggers after project selection
+                console.log(`🔄 Auto-loading triggers for selected project: ${selected.project.name}`);
                 await this.loadTriggers();
             }
         } catch (error) {
