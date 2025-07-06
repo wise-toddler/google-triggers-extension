@@ -626,6 +626,7 @@ class GoogleCloudBuildTreeDataProvider {
                         delete this.substitutions[triggerId];
                     }
                 }
+                this.saveState();
                 vscode.window.showInformationMessage(`✅ Reset "${key}" to default value`);
             }
         } else {
