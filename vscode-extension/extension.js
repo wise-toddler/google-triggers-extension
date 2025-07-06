@@ -642,6 +642,7 @@ class GoogleCloudBuildTreeDataProvider {
                         delete this.substitutions[triggerId];
                     }
                 }
+                this.saveState();
                 vscode.window.showInformationMessage(`✅ Deleted substitution "${key}"`);
             }
         }
