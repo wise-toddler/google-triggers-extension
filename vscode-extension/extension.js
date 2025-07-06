@@ -191,7 +191,67 @@ class GoogleCloudBuildTreeDataProvider {
         return items;
     }
 
-    getProjectItems() {
+    getSubstitutionItems(triggerId) {
+        const items = [];
+        
+        // Add "Trigger Build" item at the top
+        const triggerBuildItem = new vscode.TreeItem('▶️ Trigger Build', vscode.TreeItemCollapsibleState.None);
+        triggerBuildItem.contextValue = 'triggerBuild';
+        triggerBuildItem.triggerId = triggerId;
+        triggerBuildItem.command = {
+            command: 'googleCloudBuild.triggerBuild',
+            title: 'Trigger Build',
+            arguments: [this.triggers.find(t => t.id === triggerId)]
+        };
+        triggerBuildItem.iconPath = new vscode.ThemeIcon('play');
+        items.push(triggerBuildItem);
+        
+        // Get substitutions for this trigger (merge defaults + user-defined)
+        const trigger = this.triggers.find(t => t.id === triggerId);
+        const defaultSubstitutions = trigger?.substitutions || {};
+        const userSubstitutions = this.substitutions[triggerId] || {};
+        const allSubstitutions = { ...defaultSubstitutions, ...userSubstitutions };
+        
+        // Add substitution items
+        Object.entries(allSubstitutions).forEach(([key, value]) => {
+            const isDefault = defaultSubstitutions.hasOwnProperty(key);
+            const isModified = userSubstitutions.hasOwnProperty(key);
+            
+            const item = new vscode.TreeItem(`${key} = ${value}`, vscode.TreeItemCollapsibleState.None);
+            item.contextValue = 'substitution';
+            item.triggerId = triggerId;
+            item.substitutionKey = key;
+            item.substitutionValue = value;
+            item.isDefault = isDefault;
+            
+            if (isDefault && !isModified) {
+                item.description = '(default)';
+                item.iconPath = new vscode.ThemeIcon('symbol-constant');
+            } else if (isModified) {
+                item.description = isDefault ? '(modified)' : '(custom)';
+                item.iconPath = new vscode.ThemeIcon('edit');
+            } else {
+                item.iconPath = new vscode.ThemeIcon('symbol-variable');
+            }
+            
+            item.tooltip = `${key} = ${value}\nType: ${isDefault ? 'Default' : 'Custom'}${isModified ? ' (Modified)' : ''}`;
+            items.push(item);
+        });
+        
+        // Add "Add Substitution" item at the bottom
+        const addItem = new vscode.TreeItem('➕ Add Substitution', vscode.TreeItemCollapsibleState.None);
+        addItem.contextValue = 'addSubstitution';
+        addItem.triggerId = triggerId;
+        addItem.command = {
+            command: 'googleCloudBuild.addSubstitution',
+            title: 'Add Substitution',
+            arguments: [{ triggerId: triggerId }]
+        };
+        addItem.iconPath = new vscode.ThemeIcon('add');
+        items.push(addItem);
+        
+        return items;
+    }
         return this.projects.map(project => {
             const item = new vscode.TreeItem(project.name, vscode.TreeItemCollapsibleState.None);
             item.description = project.id;
