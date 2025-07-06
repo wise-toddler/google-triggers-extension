@@ -5,6 +5,8 @@ const execAsync = util.promisify(exec);
 
 function activate(context) {
     console.log('🚀 Google Cloud Build Extension - DEBUG VERSION ACTIVATING');
+    console.log('🔧 Extension Context:', context.extensionPath);
+    console.log('🔧 Extension ID:', context.extension.id);
     
     // Show info message
     vscode.window.showInformationMessage('Google Cloud Build Extension Activated! Check logs for details.');
@@ -12,15 +14,20 @@ function activate(context) {
     try {
         // Register debug command
         const debugCommand = vscode.commands.registerCommand('googleCloudBuild.debug', () => {
-            vscode.window.showInformationMessage('Debug: Extension is working! Provider should be registered.');
-            console.log('🔧 DEBUG: Extension activated successfully');
+            console.log('🔧 DEBUG: Extension is working! Provider should be registered.');
+            console.log('🔧 DEBUG: ViewType is:', GoogleCloudBuildViewProvider.viewType);
+            vscode.window.showInformationMessage('Debug: Extension is working! Check console for ViewType: ' + GoogleCloudBuildViewProvider.viewType);
         });
         context.subscriptions.push(debugCommand);
+        console.log('✅ Debug command registered');
 
         // Register the webview view provider with detailed logging
-        console.log('🔧 Registering webview provider for view: googleCloudBuildView');
+        console.log('🔧 Starting webview provider registration...');
+        console.log('🔧 ViewType to register:', GoogleCloudBuildViewProvider.viewType);
         
         const provider = new GoogleCloudBuildViewProvider(context.extensionUri);
+        console.log('🔧 Provider instance created:', provider);
+        console.log('🔧 Provider viewType:', provider.constructor.viewType);
         
         const providerDisposable = vscode.window.registerWebviewViewProvider(
             GoogleCloudBuildViewProvider.viewType, 
@@ -32,8 +39,11 @@ function activate(context) {
             }
         );
         
+        console.log('🔧 Provider registration result:', providerDisposable);
+        
         context.subscriptions.push(providerDisposable);
         console.log('✅ Webview provider registered successfully');
+        console.log('✅ Provider added to subscriptions');
 
         // Register refresh command
         const refreshCommand = vscode.commands.registerCommand('googleCloudBuild.refresh', () => {
@@ -42,11 +52,21 @@ function activate(context) {
             vscode.window.showInformationMessage('Google Cloud Build refreshed');
         });
         context.subscriptions.push(refreshCommand);
+        console.log('✅ Refresh command registered');
 
-        console.log('✅ All commands and providers registered successfully');
+        console.log('✅ ALL COMMANDS AND PROVIDERS REGISTERED SUCCESSFULLY');
+        console.log('📋 Total subscriptions:', context.subscriptions.length);
+        
+        // Test if provider is actually registered
+        setTimeout(() => {
+            console.log('🧪 Testing provider registration after 3 seconds...');
+            console.log('🧪 Provider instance still exists:', !!provider);
+            console.log('🧪 ViewType accessible:', GoogleCloudBuildViewProvider.viewType);
+        }, 3000);
         
     } catch (error) {
-        console.error('❌ Error during activation:', error);
+        console.error('❌ ERROR DURING ACTIVATION:', error);
+        console.error('❌ Error stack:', error.stack);
         vscode.window.showErrorMessage(`Extension activation failed: ${error.message}`);
     }
 }
