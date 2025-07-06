@@ -175,12 +175,29 @@ class CommandHandlers {
         if (!this.treeDataProvider.selectedProject || !trigger) return;
 
         try {
+            // Step 1: Ask for branch selection when triggering build
+            const branchInput = await vscode.window.showInputBox({
+                prompt: `Enter branch name for "${trigger.name}"`,
+                value: this.treeDataProvider.selectedBranch || 'main',
+                placeHolder: 'main, develop, feature/my-branch...',
+                validateInput: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'Branch name cannot be empty';
+                    }
+                    return null;
+                }
+            });
+
+            if (!branchInput) return; // User cancelled
+
+            const branchName = branchInput.trim();
             const regionName = REGIONS.find(r => r.id === this.treeDataProvider.selectedRegion)?.name || this.treeDataProvider.selectedRegion;
             const substitutions = this.treeDataProvider.substitutions[trigger.id] || {};
             const subsCount = Object.keys(substitutions).length;
             
-            let confirmMessage = `Trigger build for "${trigger.name}" in ${regionName}?`;
-            confirmMessage += `\nBranch: ${this.treeDataProvider.selectedBranch}`;
+            let confirmMessage = `Trigger build for "${trigger.name}"?`;
+            confirmMessage += `\nBranch: ${branchName}`;
+            confirmMessage += `\nRegion: ${regionName}`;
             if (subsCount > 0) {
                 const subsPreview = Object.entries(substitutions)
                     .map(([k, v]) => `${k}=${v}`)
@@ -194,18 +211,18 @@ class CommandHandlers {
 
             if (confirm !== 'Yes') return;
 
-            vscode.window.showInformationMessage(`Triggering build: ${trigger.name} (${this.treeDataProvider.selectedBranch}) in ${regionName}...`);
+            vscode.window.showInformationMessage(`Triggering build: ${trigger.name} (${branchName}) in ${regionName}...`);
             
             const result = await this.gcloudService.triggerBuild(
                 trigger.id,
                 this.treeDataProvider.selectedProject,
                 this.treeDataProvider.selectedRegion,
-                this.treeDataProvider.selectedBranch,
+                branchName, // Use the branch entered by user
                 substitutions
             );
             
             let successMessage = `✅ Build triggered successfully! Build ID: ${result.buildId}`;
-            successMessage += `\nBranch: ${this.treeDataProvider.selectedBranch} | Region: ${regionName}`;
+            successMessage += `\nBranch: ${branchName} | Region: ${regionName}`;
             if (subsCount > 0) {
                 successMessage += ` | ${subsCount} substitution(s)`;
             }
