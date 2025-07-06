@@ -88,6 +88,11 @@
           "command": "googleCloudBuild.triggerBuild",
           "when": "view == googleCloudBuildTree && viewItem == trigger",
           "group": "inline"
+        },
+        {
+          "command": "googleCloudBuild.configureSubstitutions",
+          "when": "view == googleCloudBuildTree && viewItem == trigger",
+          "group": "context"
         }
       ]
     }
