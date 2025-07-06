@@ -140,6 +140,19 @@ class GoogleCloudBuildTreeDataProvider {
             items.push(selectProjectItem);
         }
 
+        // Selected region
+        const regionName = this.regions.find(r => r.id === this.selectedRegion)?.name || this.selectedRegion;
+        const regionItem = new vscode.TreeItem(
+            `🌍 Region: ${regionName}`,
+            vscode.TreeItemCollapsibleState.None
+        );
+        regionItem.contextValue = 'selectedRegion';
+        regionItem.command = {
+            command: 'googleCloudBuild.selectRegion',
+            title: 'Select Region'
+        };
+        items.push(regionItem);
+
         // Triggers group
         if (this.selectedProject) {
             const triggersGroup = new vscode.TreeItem(
