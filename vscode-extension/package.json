@@ -105,8 +105,18 @@
           "group": "inline"
         },
         {
-          "command": "googleCloudBuild.configureSubstitutions",
+          "command": "googleCloudBuild.addSubstitution",
           "when": "view == googleCloudBuildTree && viewItem == trigger",
+          "group": "context"
+        },
+        {
+          "command": "googleCloudBuild.editSubstitution",
+          "when": "view == googleCloudBuildTree && viewItem == substitution",
+          "group": "inline"
+        },
+        {
+          "command": "googleCloudBuild.deleteSubstitution",
+          "when": "view == googleCloudBuildTree && viewItem == substitution",
           "group": "context"
         }
       ]
