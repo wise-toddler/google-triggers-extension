@@ -339,6 +339,22 @@ class GoogleCloudBuildTreeDataProvider {
             this.refresh();
         }
     }
+
+    // Pin management methods
+    async toggleTriggerPin(triggerId) {
+        const isPinned = await this.pinManager.togglePin(triggerId);
+        this.refresh();
+        return isPinned;
+    }
+
+    async clearAllPins() {
+        await this.pinManager.clearAllPins();
+        this.refresh();
+    }
+
+    isPinned(triggerId) {
+        return this.pinManager.isPinned(triggerId);
+    }
 }
 
 module.exports = GoogleCloudBuildTreeDataProvider;
