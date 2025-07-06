@@ -34,7 +34,8 @@ const STORAGE_KEYS = {
     SELECTED_PROJECT: 'selectedProject',
     SELECTED_REGION: 'selectedRegion',
     SELECTED_BRANCH: 'selectedBranch',
-    SUBSTITUTIONS: 'substitutions'
+    SUBSTITUTIONS: 'substitutions',
+    PINNED_TRIGGERS: 'pinnedTriggers'
 };
 
 const DEFAULTS = {
