@@ -401,7 +401,8 @@ class GoogleCloudBuildTreeDataProvider {
                 github_repo: t.github?.name || null,
                 branch: t.github?.push?.branch || null,
                 disabled: t.disabled || false,
-                region: this.selectedRegion
+                region: this.selectedRegion,
+                substitutions: t.substitutions || {} // Store default substitutions
             }));
             
             const regionName = this.regions.find(r => r.id === this.selectedRegion)?.name || this.selectedRegion;
