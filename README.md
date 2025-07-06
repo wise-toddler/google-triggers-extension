@@ -101,9 +101,8 @@ code --install-extension ./vscode-extension/google-cloud-build-extension-3.0.0.v
 │   ├── extension.js           # Entry point
 │   ├── package.json           # Extension manifest
 │   └── *.vsix                 # Packaged extension
-├── backend/                   # FastAPI backend (web prototype)
-├── frontend/                  # React frontend (web prototype)
-└── tests/                     # Test files
+├── tests/                     # Test files
+└── README.md                  # Project documentation
 ```
 
 ### Building:
