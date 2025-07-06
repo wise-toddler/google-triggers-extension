@@ -226,6 +226,30 @@ class GoogleCloudBuildTreeDataProvider {
         }
     }
 
+    async selectRegion() {
+        const regionItems = this.regions.map(r => ({
+            label: r.name,
+            description: r.id,
+            region: r
+        }));
+
+        const selected = await vscode.window.showQuickPick(regionItems, {
+            placeHolder: 'Select a Google Cloud region for build triggers'
+        });
+
+        if (selected) {
+            this.selectedRegion = selected.region.id;
+            vscode.window.showInformationMessage(`Selected region: ${selected.region.name}`);
+            
+            // Reload triggers for the new region if project is selected
+            if (this.selectedProject) {
+                await this.loadTriggers();
+            }
+            
+            this.refresh();
+        }
+    }
+
     async selectProject() {
         if (!this.authStatus) {
             vscode.window.showWarningMessage('Please authenticate first');
