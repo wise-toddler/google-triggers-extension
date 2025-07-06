@@ -268,10 +268,17 @@ test_plan:
     - "Google Cloud Projects Listing"
     - "Google Cloud Build Triggers Listing"
     - "Google Cloud Build Trigger Execution"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Google Cloud Authentication Status Check"
+    - "Google Cloud Projects Listing"
+    - "Google Cloud Build Triggers Listing"
+    - "Google Cloud Build Trigger Execution"
+    - "Build Status and Recent Builds"
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
       message: "Initial implementation complete. Built web-based VSCode extension prototype with Google Cloud Build integration using gcloud CLI commands. All core functionality implemented including authentication, project/region/trigger selection, substitution parameters, and trigger execution. Ready for backend testing to verify gcloud CLI integration works correctly."
+    - agent: "testing"
+      message: "Completed backend testing. Created and executed backend_test.py to test all API endpoints. Found that the Google Cloud Regions Listing endpoint works correctly as it uses static data. All other endpoints that rely on gcloud CLI commands return 500 errors because gcloud is not installed in the environment. The backend code is correctly implemented but requires gcloud CLI to be installed to function properly. This is expected behavior in a test environment without gcloud. For production use, the server environment would need gcloud CLI installed and configured."
