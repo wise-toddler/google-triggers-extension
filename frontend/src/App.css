@@ -1,38 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .App {
-    text-align: center;
+  text-align: left;
 }
 
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+::-webkit-scrollbar-track {
+  background: #374151;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
+::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 2px solid #374151;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* VSCode-like styling */
+.vscode-panel {
+  background: #1e1e1e;
+  color: #cccccc;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.vscode-sidebar {
+  background: #252526;
+  border-right: 1px solid #464647;
+}
+
+.vscode-input {
+  background: #3c3c3c;
+  border: 1px solid #464647;
+  color: #cccccc;
+}
+
+.vscode-input:focus {
+  border-color: #007acc;
+  outline: none;
+}
+
+.vscode-button {
+  background: #0e639c;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.vscode-button:hover {
+  background: #1177bb;
+}
+
+.vscode-button:disabled {
+  background: #464647;
+  cursor: not-allowed;
+}
+
+/* Status indicators */
+.status-success {
+  color: #4caf50;
+}
+
+.status-error {
+  color: #f44336;
+}
+
+.status-warning {
+  color: #ff9800;
+}
+
+.status-info {
+  color: #2196f3;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .App {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
-}
-
-.App-link {
-    color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+  }
+  
+  .vscode-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 50vh;
+  }
 }
