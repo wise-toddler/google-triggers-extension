@@ -325,7 +325,68 @@ class GoogleCloudBuildTreeDataProvider {
         }
     }
 
-    async triggerBuild(trigger) {
+    async configureSubstitutions(trigger) {
+        if (!trigger) return;
+
+        const currentSubs = this.substitutions[trigger.id] || {};
+        const currentSubsText = Object.entries(currentSubs)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('\n');
+
+        const input = await vscode.window.showInputBox({
+            title: `Configure Substitutions for "${trigger.name}"`,
+            prompt: 'Enter substitutions as KEY=VALUE pairs (one per line)',
+            value: currentSubsText,
+            placeHolder: 'Example:\n_BRANCH=main\n_ENV=production\n_VERSION=1.0.0',
+            ignoreFocusOut: true,
+            validateInput: (value) => {
+                if (!value.trim()) return null; // Empty is OK
+                
+                const lines = value.split('\n').filter(line => line.trim());
+                for (const line of lines) {
+                    if (!line.includes('=')) {
+                        return `Invalid format: "${line}". Use KEY=VALUE format.`;
+                    }
+                    const [key] = line.split('=');
+                    if (!key.trim()) {
+                        return `Invalid key in: "${line}". Key cannot be empty.`;
+                    }
+                }
+                return null;
+            }
+        });
+
+        if (input !== undefined) {
+            // Parse substitutions
+            const newSubs = {};
+            if (input.trim()) {
+                const lines = input.split('\n').filter(line => line.trim());
+                for (const line of lines) {
+                    const [key, ...valueParts] = line.split('=');
+                    const value = valueParts.join('='); // Join back in case value contains =
+                    if (key.trim() && value !== undefined) {
+                        newSubs[key.trim()] = value;
+                    }
+                }
+            }
+
+            this.substitutions[trigger.id] = newSubs;
+            
+            const count = Object.keys(newSubs).length;
+            if (count > 0) {
+                const subsPreview = Object.entries(newSubs)
+                    .map(([k, v]) => `${k}=${v}`)
+                    .join(', ');
+                vscode.window.showInformationMessage(
+                    `✅ Configured ${count} substitution(s) for "${trigger.name}": ${subsPreview}`
+                );
+            } else {
+                vscode.window.showInformationMessage(`🗑️ Cleared substitutions for "${trigger.name}"`);
+            }
+            
+            this.refresh();
+        }
+    }
         if (!this.selectedProject || !trigger) return;
 
         const regionName = this.regions.find(r => r.id === this.selectedRegion)?.name || this.selectedRegion;
