@@ -1,6 +1,7 @@
 // Tree data provider for VSCode extension
 const vscode = require('vscode');
 const { REGIONS } = require('./constants');
+const PinManager = require('./pinManager');
 
 class GoogleCloudBuildTreeDataProvider {
     constructor(stateManager, gcloudService) {
@@ -9,6 +10,7 @@ class GoogleCloudBuildTreeDataProvider {
         
         this.stateManager = stateManager;
         this.gcloudService = gcloudService;
+        this.pinManager = new PinManager(stateManager);
         
         // Load saved state
         const state = this.stateManager.loadState();
