@@ -671,13 +671,18 @@ class GoogleCloudBuildTreeDataProvider {
         if (confirm !== 'Yes') return;
 
         try {
-            vscode.window.showInformationMessage(`Triggering build: ${trigger.name} in ${regionName}...`);
+            vscode.window.showInformationMessage(`Triggering build: ${trigger.name} (${this.selectedBranch}) in ${regionName}...`);
             
             let command = `gcloud builds triggers run ${trigger.id} --project=${this.selectedProject} --format=json`;
             
             // Add region parameter if not global
             if (this.selectedRegion && this.selectedRegion !== 'global') {
                 command += ` --region=${this.selectedRegion}`;
+            }
+            
+            // Add branch parameter
+            if (this.selectedBranch) {
+                command += ` --branch=${this.selectedBranch}`;
             }
             
             // Add substitutions
@@ -691,9 +696,10 @@ class GoogleCloudBuildTreeDataProvider {
             const result = JSON.parse(stdout);
             
             const buildId = result.name ? result.name.split('/').pop() : 'unknown';
-            let successMessage = `✅ Build triggered successfully! Build ID: ${buildId} (${regionName})`;
+            let successMessage = `✅ Build triggered successfully! Build ID: ${buildId}`;
+            successMessage += `\nBranch: ${this.selectedBranch} | Region: ${regionName}`;
             if (subsCount > 0) {
-                successMessage += ` with ${subsCount} substitution(s)`;
+                successMessage += ` | ${subsCount} substitution(s)`;
             }
             vscode.window.showInformationMessage(successMessage);
             
