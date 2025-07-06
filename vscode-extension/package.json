@@ -3,7 +3,7 @@
   "name": "google-cloud-build-extension",
   "displayName": "Google Cloud Build DEBUG",
   "description": "Debug version - Manage Google Cloud Build triggers directly from VSCode",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "engines": {
     "vscode": "^1.60.0"
   },
