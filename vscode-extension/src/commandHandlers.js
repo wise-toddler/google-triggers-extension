@@ -169,7 +169,10 @@ class CommandHandlers {
     }
 
     async loadTriggers() {
-        if (!this.treeDataProvider.selectedProject) return;
+        if (!this.treeDataProvider.selectedProject) {
+            console.log('⚠️ No project selected, skipping trigger loading');
+            return;
+        }
 
         try {
             const regionName = REGIONS.find(r => r.id === this.treeDataProvider.selectedRegion)?.name || this.treeDataProvider.selectedRegion;
@@ -181,12 +184,28 @@ class CommandHandlers {
             );
             
             this.treeDataProvider.setTriggers(triggers);
-            vscode.window.showInformationMessage(`✅ Loaded ${triggers.length} build triggers from ${regionName}`);
+            
+            const pinStats = this.treeDataProvider.pinManager.getPinStats(triggers);
+            let successMessage = `✅ Loaded ${triggers.length} build triggers from ${regionName}`;
+            if (pinStats.pinned > 0) {
+                successMessage += ` (${pinStats.pinned} pinned)`;
+            }
+            
+            vscode.window.showInformationMessage(successMessage);
+            console.log(`✅ Successfully loaded ${triggers.length} triggers (${pinStats.pinned} pinned)`);
             
         } catch (error) {
             console.error('Failed to load triggers:', error);
-            vscode.window.showErrorMessage(`Failed to load triggers: ${error.message}`);
             this.treeDataProvider.setTriggers([]);
+            
+            // More specific error messages
+            if (error.message.includes('Authentication')) {
+                vscode.window.showErrorMessage(`Authentication error: Please run 'gcloud auth application-default login'`);
+            } else if (error.message.includes('permission')) {
+                vscode.window.showErrorMessage(`Permission error: Check Cloud Build permissions for project ${this.treeDataProvider.selectedProject}`);
+            } else {
+                vscode.window.showErrorMessage(`Failed to load triggers: ${error.message}`);
+            }
         }
     }
 
