@@ -202,18 +202,17 @@ class GoogleCloudBuildTreeDataProvider {
 
     getTriggerItems() {
         return this.triggers.map(trigger => {
-            const hasSubstitutions = this.substitutions[trigger.id] && Object.keys(this.substitutions[trigger.id]).length > 0;
-            const item = new vscode.TreeItem(trigger.name, vscode.TreeItemCollapsibleState.None);
-            item.description = hasSubstitutions ? 
-                `${trigger.id} • ${Object.keys(this.substitutions[trigger.id] || {}).length} vars` : 
+            const substitutions = this.substitutions[trigger.id] || {};
+            const subsCount = Object.keys(substitutions).length;
+            
+            const item = new vscode.TreeItem(trigger.name, vscode.TreeItemCollapsibleState.Collapsed);
+            item.description = subsCount > 0 ? 
+                `${trigger.id} • ${subsCount} vars` : 
                 trigger.id;
             item.contextValue = 'trigger';
-            item.command = {
-                command: 'googleCloudBuild.triggerBuild',
-                title: 'Trigger Build',
-                arguments: [trigger]
-            };
-            item.iconPath = new vscode.ThemeIcon(hasSubstitutions ? 'settings-gear' : 'play');
+            item.triggerId = trigger.id; // Store trigger ID for substitutions
+            item.iconPath = new vscode.ThemeIcon(subsCount > 0 ? 'settings-gear' : 'play');
+            item.tooltip = `Trigger: ${trigger.name}\nID: ${trigger.id}\nSubstitutions: ${subsCount}`;
             return item;
         });
     }
