@@ -656,11 +656,12 @@ class GoogleCloudBuildTreeDataProvider {
         const subsCount = Object.keys(substitutions).length;
         
         let confirmMessage = `Trigger build for "${trigger.name}" in ${regionName}?`;
+        confirmMessage += `\nBranch: ${this.selectedBranch}`;
         if (subsCount > 0) {
             const subsPreview = Object.entries(substitutions)
                 .map(([k, v]) => `${k}=${v}`)
                 .join(', ');
-            confirmMessage += `\n\nSubstitutions (${subsCount}): ${subsPreview}`;
+            confirmMessage += `\nSubstitutions (${subsCount}): ${subsPreview}`;
         }
 
         const confirm = await vscode.window.showQuickPick(['Yes', 'No'], {
