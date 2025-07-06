@@ -392,8 +392,19 @@ class GoogleCloudBuildTreeDataProvider {
         if (!this.selectedProject || !trigger) return;
 
         const regionName = this.regions.find(r => r.id === this.selectedRegion)?.name || this.selectedRegion;
+        const substitutions = this.substitutions[trigger.id] || {};
+        const subsCount = Object.keys(substitutions).length;
+        
+        let confirmMessage = `Trigger build for "${trigger.name}" in ${regionName}?`;
+        if (subsCount > 0) {
+            const subsPreview = Object.entries(substitutions)
+                .map(([k, v]) => `${k}=${v}`)
+                .join(', ');
+            confirmMessage += `\n\nSubstitutions (${subsCount}): ${subsPreview}`;
+        }
+
         const confirm = await vscode.window.showQuickPick(['Yes', 'No'], {
-            placeHolder: `Trigger build for "${trigger.name}" in ${regionName}?`
+            placeHolder: confirmMessage
         });
 
         if (confirm !== 'Yes') return;
@@ -408,13 +419,22 @@ class GoogleCloudBuildTreeDataProvider {
                 command += ` --region=${this.selectedRegion}`;
             }
             
+            // Add substitutions
+            for (const [key, value] of Object.entries(substitutions)) {
+                command += ` --substitutions=${key}=${value}`;
+            }
+            
             console.log('🚀 Executing build command:', command);
             
             const { stdout } = await execAsync(command);
             const result = JSON.parse(stdout);
             
             const buildId = result.name ? result.name.split('/').pop() : 'unknown';
-            vscode.window.showInformationMessage(`✅ Build triggered successfully! Build ID: ${buildId} (${regionName})`);
+            let successMessage = `✅ Build triggered successfully! Build ID: ${buildId} (${regionName})`;
+            if (subsCount > 0) {
+                successMessage += ` with ${subsCount} substitution(s)`;
+            }
+            vscode.window.showInformationMessage(successMessage);
             
         } catch (error) {
             console.error('Failed to trigger build:', error);
