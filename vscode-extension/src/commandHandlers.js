@@ -15,7 +15,6 @@ class CommandHandlers {
             vscode.commands.registerCommand('googleCloudBuild.checkAuth', () => this.handleCheckAuth()),
             vscode.commands.registerCommand('googleCloudBuild.selectProject', () => this.handleSelectProject()),
             vscode.commands.registerCommand('googleCloudBuild.selectRegion', () => this.handleSelectRegion()),
-            vscode.commands.registerCommand('googleCloudBuild.selectBranch', () => this.handleSelectBranch()),
             vscode.commands.registerCommand('googleCloudBuild.triggerBuild', (trigger) => this.handleTriggerBuild(trigger)),
             vscode.commands.registerCommand('googleCloudBuild.addSubstitution', (trigger) => this.handleAddSubstitution(trigger)),
             vscode.commands.registerCommand('googleCloudBuild.editSubstitution', (substitution) => this.handleEditSubstitution(substitution)),
