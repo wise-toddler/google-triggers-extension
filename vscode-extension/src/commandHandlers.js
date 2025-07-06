@@ -44,13 +44,27 @@ class CommandHandlers {
             if (authResult.authenticated) {
                 this.treeDataProvider.setAuthStatus(authResult.account);
                 vscode.window.showInformationMessage(`✅ Authenticated as: ${authResult.account}`);
+                
+                // Auto-load projects after authentication
                 await this.loadProjects();
+                
+                // If project was previously selected, auto-load triggers
+                if (this.treeDataProvider.selectedProject) {
+                    console.log(`🔄 Auto-loading triggers for previously selected project: ${this.treeDataProvider.selectedProject}`);
+                    await this.loadTriggers();
+                }
+                
             } else {
                 this.treeDataProvider.setAuthStatus(null);
+                this.treeDataProvider.setProjects([]);
+                this.treeDataProvider.setTriggers([]);
                 vscode.window.showWarningMessage('❌ Not authenticated. Run: gcloud auth application-default login');
             }
         } catch (error) {
             console.error('Authentication check failed:', error);
+            this.treeDataProvider.setAuthStatus(null);
+            this.treeDataProvider.setProjects([]);
+            this.treeDataProvider.setTriggers([]);
             vscode.window.showErrorMessage(`Authentication check failed: ${error.message}`);
         }
     }
