@@ -602,6 +602,7 @@ class GoogleCloudBuildTreeDataProvider {
         }
         this.substitutions[triggerId][key] = newValue;
 
+        this.saveState();
         vscode.window.showInformationMessage(`✅ Updated ${key} = ${newValue}`);
         this.refresh();
     }
