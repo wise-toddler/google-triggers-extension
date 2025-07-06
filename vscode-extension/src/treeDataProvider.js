@@ -42,7 +42,15 @@ class GoogleCloudBuildTreeDataProvider {
         }
         
         if (element.contextValue === 'triggersGroup') {
-            return this.getTriggerItems();
+            return this.getTriggerGroups();
+        }
+        
+        if (element.contextValue === 'pinnedTriggersGroup') {
+            return this.getPinnedTriggerItems();
+        }
+        
+        if (element.contextValue === 'unpinnedTriggersGroup') {
+            return this.getUnpinnedTriggerItems();
         }
         
         if (element.contextValue === 'trigger') {
