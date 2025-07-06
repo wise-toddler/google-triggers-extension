@@ -8,7 +8,7 @@ import sys
 import asyncio
 
 # Get the backend URL from the frontend .env file
-BACKEND_URL = "https://81dc01f2-6fa9-45c8-9a0e-de55c9b2c981.preview.emergentagent.com"
+BACKEND_URL = "https://9cd040cc-83ac-4b72-9a66-2f43c1b022c7.preview.emergentagent.com"
 API_BASE_URL = f"{BACKEND_URL}/api"
 
 # Sample mock data for gcloud commands
