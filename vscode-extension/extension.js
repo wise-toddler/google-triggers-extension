@@ -69,15 +69,19 @@ function activate(context) {
 }
 
 class GoogleCloudBuildTreeDataProvider {
-    constructor() {
+    constructor(context) {
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+        this.context = context; // Store context for state management
+        
+        // Load saved state
         this.authStatus = null;
-        this.selectedProject = null;
-        this.selectedRegion = 'global';
+        this.selectedProject = context.globalState.get('selectedProject', null);
+        this.selectedRegion = context.globalState.get('selectedRegion', 'global');
+        this.selectedBranch = context.globalState.get('selectedBranch', 'main');
         this.triggers = [];
         this.projects = [];
-        this.substitutions = {}; // Store substitutions per trigger ID
+        this.substitutions = context.globalState.get('substitutions', {}); // Persistent substitutions
         this.regions = [
             { id: 'global', name: 'Global' },
             { id: 'us-central1', name: 'US Central 1 (Iowa)' },
