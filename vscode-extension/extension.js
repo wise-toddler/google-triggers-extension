@@ -478,7 +478,109 @@ class GoogleCloudBuildTreeDataProvider {
         }
     }
 
-    async triggerBuild(trigger) {
+    async addSubstitution(trigger) {
+        const triggerId = trigger.triggerId || trigger.id;
+        if (!triggerId) return;
+
+        const key = await vscode.window.showInputBox({
+            prompt: 'Enter substitution key (e.g., _ENV, _VERSION)',
+            placeHolder: '_MY_VAR',
+            validateInput: (value) => {
+                if (!value.trim()) return 'Key cannot be empty';
+                if (value.includes('=')) return 'Key cannot contain = symbol';
+                return null;
+            }
+        });
+
+        if (!key) return;
+
+        const value = await vscode.window.showInputBox({
+            prompt: `Enter value for "${key}"`,
+            placeHolder: 'production',
+            validateInput: (value) => {
+                if (value === undefined || value === null) return 'Value cannot be empty';
+                return null;
+            }
+        });
+
+        if (value === undefined) return;
+
+        // Add to substitutions
+        if (!this.substitutions[triggerId]) {
+            this.substitutions[triggerId] = {};
+        }
+        this.substitutions[triggerId][key] = value;
+
+        vscode.window.showInformationMessage(`✅ Added substitution: ${key} = ${value}`);
+        this.refresh();
+    }
+
+    async editSubstitution(substitution) {
+        const triggerId = substitution.triggerId;
+        const key = substitution.substitutionKey;
+        const currentValue = substitution.substitutionValue;
+
+        const newValue = await vscode.window.showInputBox({
+            prompt: `Edit value for "${key}"`,
+            value: currentValue,
+            validateInput: (value) => {
+                if (value === undefined || value === null) return 'Value cannot be empty';
+                return null;
+            }
+        });
+
+        if (newValue === undefined || newValue === currentValue) return;
+
+        // Update substitution
+        if (!this.substitutions[triggerId]) {
+            this.substitutions[triggerId] = {};
+        }
+        this.substitutions[triggerId][key] = newValue;
+
+        vscode.window.showInformationMessage(`✅ Updated ${key} = ${newValue}`);
+        this.refresh();
+    }
+
+    async deleteSubstitution(substitution) {
+        const triggerId = substitution.triggerId;
+        const key = substitution.substitutionKey;
+        const isDefault = substitution.isDefault;
+
+        if (isDefault) {
+            // For default substitutions, we can't delete them, but we can reset to default
+            const confirm = await vscode.window.showQuickPick(['Yes', 'No'], {
+                placeHolder: `Reset "${key}" to default value?`
+            });
+            
+            if (confirm === 'Yes') {
+                // Remove from user substitutions to reset to default
+                if (this.substitutions[triggerId]) {
+                    delete this.substitutions[triggerId][key];
+                    if (Object.keys(this.substitutions[triggerId]).length === 0) {
+                        delete this.substitutions[triggerId];
+                    }
+                }
+                vscode.window.showInformationMessage(`✅ Reset "${key}" to default value`);
+            }
+        } else {
+            // For custom substitutions, we can delete them
+            const confirm = await vscode.window.showQuickPick(['Yes', 'No'], {
+                placeHolder: `Delete substitution "${key}"?`
+            });
+            
+            if (confirm === 'Yes') {
+                if (this.substitutions[triggerId]) {
+                    delete this.substitutions[triggerId][key];
+                    if (Object.keys(this.substitutions[triggerId]).length === 0) {
+                        delete this.substitutions[triggerId];
+                    }
+                }
+                vscode.window.showInformationMessage(`✅ Deleted substitution "${key}"`);
+            }
+        }
+
+        this.refresh();
+    }
         if (!this.selectedProject || !trigger) return;
 
         const regionName = this.regions.find(r => r.id === this.selectedRegion)?.name || this.selectedRegion;
