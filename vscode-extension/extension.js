@@ -191,6 +191,15 @@ class GoogleCloudBuildTreeDataProvider {
         return items;
     }
 
+    getProjectItems() {
+        return this.projects.map(project => {
+            const item = new vscode.TreeItem(project.name, vscode.TreeItemCollapsibleState.None);
+            item.description = project.id;
+            item.contextValue = 'project';
+            return item;
+        });
+    }
+
     getSubstitutionItems(triggerId) {
         const items = [];
         
