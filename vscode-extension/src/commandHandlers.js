@@ -239,31 +239,34 @@ class CommandHandlers {
         if (!triggerId) return;
 
         try {
-            const key = await vscode.window.showInputBox({
-                prompt: 'Enter substitution key (e.g., _ENV, _VERSION)',
-                placeHolder: '_MY_VAR',
-                validateInput: (value) => {
-                    if (!value.trim()) return 'Key cannot be empty';
-                    if (value.includes('=')) return 'Key cannot contain = symbol';
-                    return null;
+            // Create and show a webview for better input experience
+            const panel = vscode.window.createWebviewPanel(
+                'addSubstitution',
+                'Add Substitution Variable',
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: false
+                }
+            );
+
+            panel.webview.html = this.getSubstitutionWebviewContent('add', '', '');
+
+            // Handle messages from webview
+            panel.webview.onDidReceiveMessage(async (message) => {
+                switch (message.command) {
+                    case 'save':
+                        if (message.key && message.value !== undefined) {
+                            await this.treeDataProvider.addSubstitution(triggerId, message.key, message.value);
+                            vscode.window.showInformationMessage(`✅ Added substitution: ${message.key} = ${message.value}`);
+                        }
+                        panel.dispose();
+                        break;
+                    case 'cancel':
+                        panel.dispose();
+                        break;
                 }
             });
-
-            if (!key) return;
-
-            const value = await vscode.window.showInputBox({
-                prompt: `Enter value for "${key}"`,
-                placeHolder: 'production',
-                validateInput: (value) => {
-                    if (value === undefined || value === null) return 'Value cannot be empty';
-                    return null;
-                }
-            });
-
-            if (value === undefined) return;
-
-            await this.treeDataProvider.addSubstitution(triggerId, key, value);
-            vscode.window.showInformationMessage(`✅ Added substitution: ${key} = ${value}`);
             
         } catch (error) {
             console.error('Failed to add substitution:', error);
@@ -277,19 +280,34 @@ class CommandHandlers {
             const key = substitution.substitutionKey;
             const currentValue = substitution.substitutionValue;
 
-            const newValue = await vscode.window.showInputBox({
-                prompt: `Edit value for "${key}"`,
-                value: currentValue,
-                validateInput: (value) => {
-                    if (value === undefined || value === null) return 'Value cannot be empty';
-                    return null;
+            // Create and show a webview for better editing experience
+            const panel = vscode.window.createWebviewPanel(
+                'editSubstitution',
+                `Edit Substitution: ${key}`,
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: false
+                }
+            );
+
+            panel.webview.html = this.getSubstitutionWebviewContent('edit', key, currentValue);
+
+            // Handle messages from webview
+            panel.webview.onDidReceiveMessage(async (message) => {
+                switch (message.command) {
+                    case 'save':
+                        if (message.value !== undefined && message.value !== currentValue) {
+                            await this.treeDataProvider.addSubstitution(triggerId, key, message.value);
+                            vscode.window.showInformationMessage(`✅ Updated ${key} = ${message.value}`);
+                        }
+                        panel.dispose();
+                        break;
+                    case 'cancel':
+                        panel.dispose();
+                        break;
                 }
             });
-
-            if (newValue === undefined || newValue === currentValue) return;
-
-            await this.treeDataProvider.addSubstitution(triggerId, key, newValue);
-            vscode.window.showInformationMessage(`✅ Updated ${key} = ${newValue}`);
             
         } catch (error) {
             console.error('Failed to edit substitution:', error);
