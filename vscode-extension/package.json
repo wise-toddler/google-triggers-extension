@@ -27,9 +27,9 @@
         "icon": "$(key)"
       },
         {
-        "command": "googleCloudBuild.selectRegion",
-        "title": "Select Region",
-        "icon": "$(globe)"
+        "command": "googleCloudBuild.selectBranch",
+        "title": "Select Branch",
+        "icon": "$(git-branch)"
       },
       {
         "command": "googleCloudBuild.selectProject",
