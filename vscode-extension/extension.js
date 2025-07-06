@@ -52,6 +52,8 @@ function activate(context) {
 }
 
 class GoogleCloudBuildViewProvider {
+    static viewType = 'googleCloudBuildView';
+    
     constructor(extensionUri) {
         this._extensionUri = extensionUri;
         this._view = undefined;
