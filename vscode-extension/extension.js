@@ -319,21 +319,30 @@ class GoogleCloudBuildTreeDataProvider {
     async triggerBuild(trigger) {
         if (!this.selectedProject || !trigger) return;
 
+        const regionName = this.regions.find(r => r.id === this.selectedRegion)?.name || this.selectedRegion;
         const confirm = await vscode.window.showQuickPick(['Yes', 'No'], {
-            placeHolder: `Trigger build for "${trigger.name}"?`
+            placeHolder: `Trigger build for "${trigger.name}" in ${regionName}?`
         });
 
         if (confirm !== 'Yes') return;
 
         try {
-            vscode.window.showInformationMessage(`Triggering build: ${trigger.name}...`);
+            vscode.window.showInformationMessage(`Triggering build: ${trigger.name} in ${regionName}...`);
             
-            const command = `gcloud builds triggers run ${trigger.id} --project=${this.selectedProject} --format=json`;
+            let command = `gcloud builds triggers run ${trigger.id} --project=${this.selectedProject} --format=json`;
+            
+            // Add region parameter if not global
+            if (this.selectedRegion && this.selectedRegion !== 'global') {
+                command += ` --region=${this.selectedRegion}`;
+            }
+            
+            console.log('🚀 Executing build command:', command);
+            
             const { stdout } = await execAsync(command);
             const result = JSON.parse(stdout);
             
             const buildId = result.name ? result.name.split('/').pop() : 'unknown';
-            vscode.window.showInformationMessage(`✅ Build triggered successfully! Build ID: ${buildId}`);
+            vscode.window.showInformationMessage(`✅ Build triggered successfully! Build ID: ${buildId} (${regionName})`);
             
         } catch (error) {
             console.error('Failed to trigger build:', error);
