@@ -26,11 +26,7 @@
         "title": "Check Authentication",
         "icon": "$(key)"
       },
-        {
-        "command": "googleCloudBuild.selectBranch",
-        "title": "Select Branch",
-        "icon": "$(git-branch)"
-      },
+
       {
         "command": "googleCloudBuild.selectProject",
         "title": "Select Project",
