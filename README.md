@@ -77,6 +77,23 @@ code --install-extension ./google-cloud-build-extension-4.1.0.vsix
 - **Australia**: southeast1
 
 ## 🔧 Development
+### Project Structure:
+```
+/app/
+├── src/                          # Modular source code
+│   ├── constants.js              # Configuration & regions
+│   ├── stateManager.js           # Persistent storage  
+│   ├── pinManager.js             # Pin functionality
+│   ├── gcloudService.js          # Google Cloud interactions
+│   ├── treeDataProvider.js       # Tree view logic
+│   └── commandHandlers.js        # Command handling
+├── extension.js                  # Main entry point
+├── package.json                  # Extension manifest
+├── google-cloud-build-extension-4.1.0.vsix # Ready to install!
+├── tests/                        # Test files
+└── README.md                     # Documentation
+```
+
 
 ### Building:
 ```bash
