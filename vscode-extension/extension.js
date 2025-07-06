@@ -46,22 +46,22 @@ class GoogleCloudBuildViewProvider {
 
         // Handle messages from the webview
         webviewView.webview.onDidReceiveMessage(
-            message => {
+            async (message) => {
                 switch (message.command) {
                     case 'checkAuth':
-                        this.checkAuthStatus(webviewView.webview);
+                        await this.checkAuthStatus(webviewView.webview);
                         break;
                     case 'listProjects':
-                        this.listProjects(webviewView.webview);
+                        await this.listProjects(webviewView.webview);
                         break;
                     case 'listTriggers':
-                        this.listTriggers(webviewView.webview, message.projectId, message.region);
+                        await this.listTriggers(webviewView.webview, message.projectId, message.region);
                         break;
                     case 'executeTrigger':
-                        this.executeTrigger(webviewView.webview, message.data);
+                        await this.executeTrigger(webviewView.webview, message.data);
                         break;
                     case 'listRecentBuilds':
-                        this.listRecentBuilds(webviewView.webview, message.projectId);
+                        await this.listRecentBuilds(webviewView.webview, message.projectId);
                         break;
                 }
             },
