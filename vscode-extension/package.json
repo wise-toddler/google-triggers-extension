@@ -42,10 +42,10 @@
         "icon": "$(play)"
       },
       {
-        "command": "googleCloudBuild.openWebPanel",
-        "title": "Open Build Panel",
-        "icon": "$(browser)"
-      }
+        "command": "googleCloudBuild.configureSubstitutions",
+        "title": "Configure Substitutions",
+        "icon": "$(settings-gear)"
+      },
     ],
     "viewsContainers": {
       "activitybar": [
