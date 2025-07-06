@@ -23,7 +23,7 @@ function activate(context) {
         const provider = new GoogleCloudBuildViewProvider(context.extensionUri);
         
         const providerDisposable = vscode.window.registerWebviewViewProvider(
-            'googleCloudBuildView', 
+            GoogleCloudBuildViewProvider.viewType, 
             provider,
             {
                 webviewOptions: {
