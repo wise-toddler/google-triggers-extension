@@ -62,6 +62,7 @@ class GoogleCloudBuildTreeDataProvider {
         this.selectedRegion = 'global';
         this.triggers = [];
         this.projects = [];
+        this.substitutions = {}; // Store substitutions per trigger ID
         this.regions = [
             { id: 'global', name: 'Global' },
             { id: 'us-central1', name: 'US Central 1 (Iowa)' },
