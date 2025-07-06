@@ -29,7 +29,6 @@
   },
   "homepage": "https://github.com/yourusername/google-cloud-build-extension#readme",
   "license": "MIT",
-  "icon": "icon.png",
   "activationEvents": [
     "onStartupFinished"
   ],
