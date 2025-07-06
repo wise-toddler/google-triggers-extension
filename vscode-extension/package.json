@@ -46,6 +46,11 @@
         "title": "Configure Substitutions",
         "icon": "$(settings-gear)"
       },
+      {
+        "command": "googleCloudBuild.openWebPanel",
+        "title": "Open Build Panel",
+        "icon": "$(browser)"
+      }
     ],
     "viewsContainers": {
       "activitybar": [
