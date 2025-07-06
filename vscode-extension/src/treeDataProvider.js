@@ -111,11 +111,13 @@ class GoogleCloudBuildTreeDataProvider {
 
         // Triggers group
         if (this.selectedProject) {
+            const pinStats = this.pinManager.getPinStats(this.triggers);
             const triggersGroup = new vscode.TreeItem(
-                `🎯 Build Triggers (${this.triggers.length})`,
+                `🎯 Build Triggers (${pinStats.total})`,
                 vscode.TreeItemCollapsibleState.Expanded
             );
             triggersGroup.contextValue = 'triggersGroup';
+            triggersGroup.tooltip = `Total: ${pinStats.total} | Pinned: ${pinStats.pinned} | Unpinned: ${pinStats.unpinned}`;
             items.push(triggersGroup);
         }
 
