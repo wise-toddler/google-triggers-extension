@@ -99,18 +99,6 @@ class GoogleCloudBuildTreeDataProvider {
         };
         items.push(regionItem);
 
-        // Selected branch
-        const branchItem = new vscode.TreeItem(
-            `🌿 Branch: ${this.selectedBranch}`,
-            vscode.TreeItemCollapsibleState.None
-        );
-        branchItem.contextValue = 'selectedBranch';
-        branchItem.command = {
-            command: 'googleCloudBuild.selectBranch',
-            title: 'Select Branch'
-        };
-        items.push(branchItem);
-
         // Triggers group
         if (this.selectedProject) {
             const triggersGroup = new vscode.TreeItem(
