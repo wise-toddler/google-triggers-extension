@@ -12,7 +12,8 @@ class StateManager {
             selectedProject: this.context.globalState.get(STORAGE_KEYS.SELECTED_PROJECT, null),
             selectedRegion: this.context.globalState.get(STORAGE_KEYS.SELECTED_REGION, DEFAULTS.REGION),
             selectedBranch: this.context.globalState.get(STORAGE_KEYS.SELECTED_BRANCH, DEFAULTS.BRANCH),
-            substitutions: this.context.globalState.get(STORAGE_KEYS.SUBSTITUTIONS, {})
+            substitutions: this.context.globalState.get(STORAGE_KEYS.SUBSTITUTIONS, {}),
+            pinnedTriggers: this.context.globalState.get(STORAGE_KEYS.PINNED_TRIGGERS, [])
         };
     }
 
