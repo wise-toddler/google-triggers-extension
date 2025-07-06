@@ -133,19 +133,87 @@ class GoogleCloudBuildTreeDataProvider {
         });
     }
 
-    getTriggerItems() {
-        return this.triggers.map(trigger => {
+    getTriggerGroups() {
+        const items = [];
+        const pinStats = this.pinManager.getPinStats(this.triggers);
+        
+        // Pinned triggers group (only show if there are pinned triggers)
+        if (pinStats.pinned > 0) {
+            const pinnedGroup = new vscode.TreeItem(
+                `📌 Pinned Triggers (${pinStats.pinned})`,
+                vscode.TreeItemCollapsibleState.Expanded
+            );
+            pinnedGroup.contextValue = 'pinnedTriggersGroup';
+            pinnedGroup.iconPath = new vscode.ThemeIcon('pinned');
+            items.push(pinnedGroup);
+        }
+        
+        // Regular triggers group (only show if there are unpinned triggers)
+        if (pinStats.unpinned > 0) {
+            const unpinnedGroup = new vscode.TreeItem(
+                `🎯 Other Triggers (${pinStats.unpinned})`,
+                vscode.TreeItemCollapsibleState.Expanded
+            );
+            unpinnedGroup.contextValue = 'unpinnedTriggersGroup';
+            unpinnedGroup.iconPath = new vscode.ThemeIcon('list-unordered');
+            items.push(unpinnedGroup);
+        }
+        
+        // If no triggers at all, show empty message
+        if (this.triggers.length === 0) {
+            const emptyItem = new vscode.TreeItem(
+                '📭 No triggers found',
+                vscode.TreeItemCollapsibleState.None
+            );
+            emptyItem.contextValue = 'emptyTriggers';
+            emptyItem.iconPath = new vscode.ThemeIcon('inbox');
+            items.push(emptyItem);
+        }
+        
+        return items;
+    }
+
+    getPinnedTriggerItems() {
+        const pinnedTriggers = this.pinManager.getPinnedTriggers(this.triggers);
+        return this.createTriggerItems(pinnedTriggers, true);
+    }
+
+    getUnpinnedTriggerItems() {
+        const unpinnedTriggers = this.pinManager.getUnpinnedTriggers(this.triggers);
+        return this.createTriggerItems(unpinnedTriggers, false);
+    }
+
+    createTriggerItems(triggers, isPinnedGroup) {
+        return triggers.map(trigger => {
             const substitutions = this.substitutions[trigger.id] || {};
             const subsCount = Object.keys(substitutions).length;
+            const isPinned = this.pinManager.isPinned(trigger.id);
             
             const item = new vscode.TreeItem(trigger.name, vscode.TreeItemCollapsibleState.Collapsed);
-            item.description = subsCount > 0 ? 
-                `${trigger.id} • ${subsCount} vars` : 
-                trigger.id;
+            
+            // Enhanced description with pin status
+            let description = trigger.id;
+            if (subsCount > 0) {
+                description += ` • ${subsCount} vars`;
+            }
+            if (isPinned && !isPinnedGroup) {
+                description += ' • 📌';
+            }
+            item.description = description;
+            
             item.contextValue = 'trigger';
             item.triggerId = trigger.id;
-            item.iconPath = new vscode.ThemeIcon(subsCount > 0 ? 'settings-gear' : 'play');
-            item.tooltip = `Trigger: ${trigger.name}\nID: ${trigger.id}\nSubstitutions: ${subsCount}`;
+            item.isPinned = isPinned;
+            
+            // Enhanced icon based on pin status and substitutions
+            if (isPinned) {
+                item.iconPath = new vscode.ThemeIcon(subsCount > 0 ? 'pinned-dirty' : 'pinned');
+            } else {
+                item.iconPath = new vscode.ThemeIcon(subsCount > 0 ? 'settings-gear' : 'play');
+            }
+            
+            item.tooltip = `Trigger: ${trigger.name}\nID: ${trigger.id}\nSubstitutions: ${subsCount}\nStatus: ${isPinned ? 'Pinned 📌' : 'Not Pinned'}`;
+            
             return item;
         });
     }
