@@ -25,9 +25,9 @@ function activate(context) {
             await treeDataProvider.checkAuthStatus();
         }),
         
-        vscode.commands.registerCommand('googleCloudBuild.selectRegion', async () => {
-            console.log('🌍 Selecting region');
-            await treeDataProvider.selectRegion();
+        vscode.commands.registerCommand('googleCloudBuild.selectBranch', async () => {
+            console.log('🌿 Selecting branch');
+            await treeDataProvider.selectBranch();
         }),
         
         vscode.commands.registerCommand('googleCloudBuild.selectProject', async () => {
