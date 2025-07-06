@@ -75,9 +75,14 @@ class GoogleCloudBuildViewProvider {
     static viewType = 'googleCloudBuildView';
     
     constructor(extensionUri) {
+        console.log('🏗️ GoogleCloudBuildViewProvider constructor called');
+        console.log('🏗️ Static viewType:', GoogleCloudBuildViewProvider.viewType);
+        console.log('🏗️ Extension URI:', extensionUri);
+        
         this._extensionUri = extensionUri;
         this._view = undefined;
-        console.log('🏗️ GoogleCloudBuildViewProvider created');
+        
+        console.log('✅ GoogleCloudBuildViewProvider created successfully');
     }
 
     refresh() {
@@ -91,7 +96,11 @@ class GoogleCloudBuildViewProvider {
     }
 
     resolveWebviewView(webviewView, context, _token) {
-        console.log('🔧 resolveWebviewView called');
+        console.log('🔧 ===== RESOLVE WEBVIEW VIEW CALLED =====');
+        console.log('🔧 webviewView:', webviewView);
+        console.log('🔧 context:', context);
+        console.log('🔧 webviewView.viewType:', webviewView.viewType);
+        console.log('🔧 Expected viewType:', GoogleCloudBuildViewProvider.viewType);
         
         this._view = webviewView;
 
@@ -102,6 +111,7 @@ class GoogleCloudBuildViewProvider {
 
         console.log('🎨 Setting webview HTML');
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        console.log('✅ Webview HTML set successfully');
 
         // Handle messages from the webview
         webviewView.webview.onDidReceiveMessage(
@@ -146,7 +156,7 @@ class GoogleCloudBuildViewProvider {
             context.subscriptions
         );
 
-        console.log('✅ Webview fully configured');
+        console.log('✅ ===== WEBVIEW FULLY CONFIGURED =====');
     }
 
     async checkAuthStatus(webview) {
