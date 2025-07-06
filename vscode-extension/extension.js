@@ -3,23 +3,25 @@ const { exec } = require('child_process');
 const util = require('util');
 const execAsync = util.promisify(exec);
 
-/**
- * @param {vscode.ExtensionContext} context
- */
 function activate(context) {
     console.log('Google Cloud Build extension is now active!');
 
-    // Register command to open the panel
-    let disposable = vscode.commands.registerCommand('googleCloudBuild.openPanel', () => {
-        GoogleCloudBuildPanel.createOrShow(context.extensionUri);
-    });
-
-    context.subscriptions.push(disposable);
-
     // Register the webview view provider
     const provider = new GoogleCloudBuildViewProvider(context.extensionUri);
+    
     context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider(GoogleCloudBuildViewProvider.viewType, provider)
+        vscode.window.registerWebviewViewProvider(GoogleCloudBuildViewProvider.viewType, provider, {
+            webviewOptions: {
+                retainContextWhenHidden: true,
+            }
+        })
+    );
+
+    // Register command to refresh the view
+    context.subscriptions.push(
+        vscode.commands.registerCommand('googleCloudBuild.refresh', () => {
+            provider.refresh();
+        })
     );
 }
 
@@ -31,6 +33,12 @@ class GoogleCloudBuildViewProvider {
         this._view = undefined;
     }
 
+    refresh() {
+        if (this._view) {
+            this._view.webview.html = this._getHtmlForWebview(this._view.webview);
+        }
+    }
+
     resolveWebviewView(webviewView, context, _token) {
         this._view = webviewView;
 
@@ -40,34 +48,42 @@ class GoogleCloudBuildViewProvider {
         };
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-        
-        // Initial auth check
-        this.checkAuthStatus(webviewView.webview);
 
         // Handle messages from the webview
         webviewView.webview.onDidReceiveMessage(
             async (message) => {
-                switch (message.command) {
-                    case 'checkAuth':
-                        await this.checkAuthStatus(webviewView.webview);
-                        break;
-                    case 'listProjects':
-                        await this.listProjects(webviewView.webview);
-                        break;
-                    case 'listTriggers':
-                        await this.listTriggers(webviewView.webview, message.projectId, message.region);
-                        break;
-                    case 'executeTrigger':
-                        await this.executeTrigger(webviewView.webview, message.data);
-                        break;
-                    case 'listRecentBuilds':
-                        await this.listRecentBuilds(webviewView.webview, message.projectId);
-                        break;
+                try {
+                    switch (message.command) {
+                        case 'checkAuth':
+                            await this.checkAuthStatus(webviewView.webview);
+                            break;
+                        case 'listProjects':
+                            await this.listProjects(webviewView.webview);
+                            break;
+                        case 'listTriggers':
+                            await this.listTriggers(webviewView.webview, message.projectId, message.region);
+                            break;
+                        case 'executeTrigger':
+                            await this.executeTrigger(webviewView.webview, message.data);
+                            break;
+                        case 'listRecentBuilds':
+                            await this.listRecentBuilds(webviewView.webview, message.projectId);
+                            break;
+                    }
+                } catch (error) {
+                    console.error('Error handling message:', error);
+                    webviewView.webview.postMessage({
+                        command: 'error',
+                        data: { message: `Error: ${error.message}` }
+                    });
                 }
             },
             undefined,
             context.subscriptions
         );
+
+        // Initialize with auth check
+        this.checkAuthStatus(webviewView.webview);
     }
 
     async checkAuthStatus(webview) {
@@ -216,15 +232,17 @@ class GoogleCloudBuildViewProvider {
     <title>Google Cloud Build</title>
     <style>
         body {
-            padding: 0;
+            padding: 10px;
             margin: 0;
             font-family: var(--vscode-font-family);
             font-size: var(--vscode-font-size);
             color: var(--vscode-foreground);
             background-color: var(--vscode-editor-background);
         }
-        .container {
-            padding: 10px;
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--vscode-descriptionForeground);
         }
         .section {
             margin-bottom: 15px;
@@ -334,67 +352,72 @@ class GoogleCloudBuildViewProvider {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="authRequired" class="auth-container hidden">
-            <div class="auth-icon">🔒</div>
-            <h3>Authentication Required</h3>
-            <p>Please authenticate with Google Cloud to continue.</p>
-            <div class="auth-command">gcloud auth application-default login</div>
-            <button onclick="checkAuth()">Check Again</button>
+    <div id="loadingContainer">
+        <div class="loading">
+            <p>🔄 Loading Google Cloud Build Extension...</p>
+            <p>Checking authentication status...</p>
+        </div>
+    </div>
+
+    <div id="authRequired" class="auth-container hidden">
+        <div class="auth-icon">🔒</div>
+        <h3>Authentication Required</h3>
+        <p>Please authenticate with Google Cloud to continue.</p>
+        <div class="auth-command">gcloud auth application-default login</div>
+        <button onclick="checkAuth()">Check Again</button>
+    </div>
+
+    <div id="mainPanel" class="hidden">
+        <div class="section">
+            <div class="section-title">Project</div>
+            <select id="projectSelect">
+                <option value="">Select a project</option>
+            </select>
         </div>
 
-        <div id="mainPanel" class="hidden">
-            <div class="section">
-                <div class="section-title">Project</div>
-                <select id="projectSelect">
-                    <option value="">Select a project</option>
-                </select>
-            </div>
+        <div class="section">
+            <div class="section-title">Region</div>
+            <select id="regionSelect">
+                <option value="global">Global</option>
+                <option value="us-central1">US Central 1</option>
+                <option value="us-east1">US East 1</option>
+                <option value="us-east4">US East 4</option>
+                <option value="us-west1">US West 1</option>
+                <option value="us-west2">US West 2</option>
+                <option value="europe-west1">Europe West 1</option>
+                <option value="europe-west2">Europe West 2</option>
+                <option value="asia-east1">Asia East 1</option>
+                <option value="asia-northeast1">Asia Northeast 1</option>
+            </select>
+        </div>
 
-            <div class="section">
-                <div class="section-title">Region</div>
-                <select id="regionSelect">
-                    <option value="global">Global</option>
-                    <option value="us-central1">US Central 1</option>
-                    <option value="us-east1">US East 1</option>
-                    <option value="us-east4">US East 4</option>
-                    <option value="us-west1">US West 1</option>
-                    <option value="us-west2">US West 2</option>
-                    <option value="europe-west1">Europe West 1</option>
-                    <option value="europe-west2">Europe West 2</option>
-                    <option value="asia-east1">Asia East 1</option>
-                    <option value="asia-northeast1">Asia Northeast 1</option>
-                </select>
-            </div>
+        <div class="section">
+            <div class="section-title">Trigger</div>
+            <select id="triggerSelect">
+                <option value="">Select a trigger</option>
+            </select>
+        </div>
 
-            <div class="section">
-                <div class="section-title">Trigger</div>
-                <select id="triggerSelect">
-                    <option value="">Select a trigger</option>
-                </select>
-            </div>
+        <div class="section">
+            <div class="section-title">Branch</div>
+            <input type="text" id="branchInput" placeholder="main" value="main">
+        </div>
 
-            <div class="section">
-                <div class="section-title">Branch</div>
-                <input type="text" id="branchInput" placeholder="main" value="main">
-            </div>
+        <div class="section">
+            <div class="section-title">Substitutions</div>
+            <div id="substitutions"></div>
+            <button onclick="addSubstitution()">+ Add Substitution</button>
+        </div>
 
-            <div class="section">
-                <div class="section-title">Substitutions</div>
-                <div id="substitutions"></div>
-                <button onclick="addSubstitution()">+ Add Substitution</button>
-            </div>
+        <div class="section">
+            <button id="executeBtn" onclick="executeTrigger()" disabled>Execute Trigger</button>
+        </div>
 
-            <div class="section">
-                <button id="executeBtn" onclick="executeTrigger()" disabled>Execute Trigger</button>
-            </div>
+        <div id="message" class="message hidden"></div>
 
-            <div id="message" class="message hidden"></div>
-
-            <div class="section">
-                <div class="section-title">Recent Builds</div>
-                <div id="recentBuilds"></div>
-            </div>
+        <div class="section">
+            <div class="section-title">Recent Builds</div>
+            <div id="recentBuilds"></div>
         </div>
     </div>
 
@@ -404,8 +427,9 @@ class GoogleCloudBuildViewProvider {
         let currentRegion = 'global';
         let substitutions = {};
 
-        // Initialize
-        checkAuth();
+        function hideLoading() {
+            document.getElementById('loadingContainer').classList.add('hidden');
+        }
 
         function checkAuth() {
             vscode.postMessage({ command: 'checkAuth' });
@@ -515,6 +539,7 @@ class GoogleCloudBuildViewProvider {
             
             switch (message.command) {
                 case 'authStatus':
+                    hideLoading();
                     if (message.data.authenticated) {
                         document.getElementById('authRequired').classList.add('hidden');
                         document.getElementById('mainPanel').classList.remove('hidden');
@@ -606,110 +631,12 @@ class GoogleCloudBuildViewProvider {
                     break;
             }
         });
+
+        // Initialize
+        setTimeout(() => {
+            checkAuth();
+        }, 1000);
     </script>
-</body>
-</html>`;
-    }
-}
-
-class GoogleCloudBuildPanel {
-    static currentPanel = undefined;
-    static viewType = 'googleCloudBuild';
-
-    static createOrShow(extensionUri) {
-        const column = vscode.window.activeTextEditor
-            ? vscode.window.activeTextEditor.viewColumn
-            : undefined;
-
-        if (GoogleCloudBuildPanel.currentPanel) {
-            GoogleCloudBuildPanel.currentPanel._panel.reveal(column);
-            return;
-        }
-
-        const panel = vscode.window.createWebviewPanel(
-            GoogleCloudBuildPanel.viewType,
-            'Google Cloud Build',
-            column || vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media')]
-            }
-        );
-
-        GoogleCloudBuildPanel.currentPanel = new GoogleCloudBuildPanel(panel, extensionUri);
-    }
-
-    constructor(panel, extensionUri) {
-        this._panel = panel;
-        this._extensionUri = extensionUri;
-        this._disposables = [];
-
-        this._update();
-
-        this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
-    }
-
-    dispose() {
-        GoogleCloudBuildPanel.currentPanel = undefined;
-        this._panel.dispose();
-        
-        while (this._disposables.length) {
-            const x = this._disposables.pop();
-            if (x) {
-                x.dispose();
-            }
-        }
-    }
-
-    _update() {
-        const webview = this._panel.webview;
-        this._panel.webview.html = this._getHtmlForWebview(webview);
-    }
-
-    _getHtmlForWebview(webview) {
-        return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Cloud Build</title>
-    <style>
-        body {
-            font-family: var(--vscode-font-family);
-            font-size: var(--vscode-font-size);
-            color: var(--vscode-foreground);
-            background-color: var(--vscode-editor-background);
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: var(--vscode-titleBar-activeForeground);
-            text-align: center;
-        }
-        .info {
-            text-align: center;
-            padding: 20px;
-            background-color: var(--vscode-input-background);
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        .code {
-            background-color: var(--vscode-textBlockQuote-background);
-            padding: 10px;
-            border-radius: 4px;
-            font-family: var(--vscode-editor-font-family);
-            color: var(--vscode-textPreformat-foreground);
-        }
-    </style>
-</head>
-<body>
-    <h1>Google Cloud Build Extension</h1>
-    <div class="info">
-        <p>This extension allows you to manage Google Cloud Build triggers directly from VSCode.</p>
-        <p>The main interface is available in the <strong>Explorer</strong> sidebar under <strong>Google Cloud Build</strong>.</p>
-        <p>Make sure you have the <strong>gcloud CLI</strong> installed and authenticated:</p>
-        <div class="code">gcloud auth application-default login</div>
-    </div>
 </body>
 </html>`;
     }
