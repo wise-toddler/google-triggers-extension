@@ -183,15 +183,18 @@ class GoogleCloudBuildTreeDataProvider {
 
     getTriggerItems() {
         return this.triggers.map(trigger => {
+            const hasSubstitutions = this.substitutions[trigger.id] && Object.keys(this.substitutions[trigger.id]).length > 0;
             const item = new vscode.TreeItem(trigger.name, vscode.TreeItemCollapsibleState.None);
-            item.description = trigger.id;
+            item.description = hasSubstitutions ? 
+                `${trigger.id} • ${Object.keys(this.substitutions[trigger.id] || {}).length} vars` : 
+                trigger.id;
             item.contextValue = 'trigger';
             item.command = {
                 command: 'googleCloudBuild.triggerBuild',
                 title: 'Trigger Build',
                 arguments: [trigger]
             };
-            item.iconPath = new vscode.ThemeIcon('play');
+            item.iconPath = new vscode.ThemeIcon(hasSubstitutions ? 'settings-gear' : 'play');
             return item;
         });
     }
