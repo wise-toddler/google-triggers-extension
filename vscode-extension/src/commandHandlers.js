@@ -376,6 +376,212 @@ class CommandHandlers {
         );
     }
 
+    getSubstitutionWebviewContent(mode, key = '', value = '') {
+        const isEdit = mode === 'edit';
+        const title = isEdit ? `Edit Substitution Variable` : 'Add Substitution Variable';
+        const keyDisabled = isEdit ? 'readonly' : '';
+        
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body {
+            font-family: var(--vscode-font-family);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 20px;
+            margin: 0;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--vscode-titleBar-activeForeground);
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            font-family: var(--vscode-font-family);
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+        }
+        input[readonly] {
+            background-color: var(--vscode-input-background);
+            opacity: 0.7;
+        }
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: var(--vscode-font-family);
+        }
+        .btn-primary {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+        .btn-primary:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+        .btn-secondary {
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+        .btn-secondary:hover {
+            background-color: var(--vscode-button-secondaryHoverBackground);
+        }
+        .help-text {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 5px;
+        }
+        .icon { font-size: 24px; margin-bottom: 10px; }
+        .examples {
+            background-color: var(--vscode-editorWidget-background);
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .examples h4 {
+            margin: 0 0 10px 0;
+            color: var(--vscode-titleBar-activeForeground);
+        }
+        .examples code {
+            background-color: var(--vscode-textCodeBlock-background);
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-family: var(--vscode-editor-font-family);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">⚙️</div>
+            <h1>${title}</h1>
+        </div>
+        
+        <div class="form-group">
+            <label for="key">Substitution Key:</label>
+            <input 
+                type="text" 
+                id="key" 
+                value="${key}" 
+                placeholder="_ENV, _VERSION, _DOCKER_TAG..."
+                ${keyDisabled}
+            >
+            <div class="help-text">
+                ${isEdit ? 'Key cannot be changed when editing' : 'Use uppercase with underscores (e.g., _MY_VARIABLE)'}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="value">Value:</label>
+            <textarea 
+                id="value" 
+                rows="3" 
+                placeholder="Enter the value for this substitution variable..."
+            >${value}</textarea>
+            <div class="help-text">
+                This value will be passed to your Cloud Build configuration
+            </div>
+        </div>
+
+        ${!isEdit ? `
+        <div class="examples">
+            <h4>💡 Common Examples:</h4>
+            <div><code>_ENV</code> → <code>production</code></div>
+            <div><code>_VERSION</code> → <code>1.2.3</code></div>
+            <div><code>_DOCKER_TAG</code> → <code>latest</code></div>
+            <div><code>_BRANCH</code> → <code>main</code></div>
+        </div>` : ''}
+
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="save()">
+                💾 ${isEdit ? 'Update' : 'Add'} Substitution
+            </button>
+            <button class="btn btn-secondary" onclick="cancel()">
+                ❌ Cancel
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+        
+        // Focus on the appropriate field
+        document.addEventListener('DOMContentLoaded', function() {
+            ${isEdit ? "document.getElementById('value').focus();" : "document.getElementById('key').focus();"}
+        });
+
+        function save() {
+            const key = document.getElementById('key').value.trim();
+            const value = document.getElementById('value').value;
+
+            if (!key) {
+                alert('Please enter a substitution key');
+                document.getElementById('key').focus();
+                return;
+            }
+
+            if (value === undefined || value === null) {
+                alert('Please enter a value');
+                document.getElementById('value').focus();
+                return;
+            }
+
+            vscode.postMessage({
+                command: 'save',
+                key: key,
+                value: value
+            });
+        }
+
+        function cancel() {
+            vscode.postMessage({
+                command: 'cancel'
+            });
+        }
+
+        // Handle Enter key in key field (if not readonly)
+        document.getElementById('key').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !this.readOnly) {
+                document.getElementById('value').focus();
+            }
+        });
+
+        // Handle Ctrl+Enter to save
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                save();
+            }
+        });
+    </script>
+</body>
+</html>`;
+    }
+
     getWebviewContent() {
         return `<!DOCTYPE html>
 <html lang="en">
