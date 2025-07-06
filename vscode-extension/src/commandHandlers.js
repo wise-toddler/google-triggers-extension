@@ -19,6 +19,8 @@ class CommandHandlers {
             vscode.commands.registerCommand('googleCloudBuild.addSubstitution', (trigger) => this.handleAddSubstitution(trigger)),
             vscode.commands.registerCommand('googleCloudBuild.editSubstitution', (substitution) => this.handleEditSubstitution(substitution)),
             vscode.commands.registerCommand('googleCloudBuild.deleteSubstitution', (substitution) => this.handleDeleteSubstitution(substitution)),
+            vscode.commands.registerCommand('googleCloudBuild.togglePin', (trigger) => this.handleTogglePin(trigger)),
+            vscode.commands.registerCommand('googleCloudBuild.clearAllPins', () => this.handleClearAllPins()),
             vscode.commands.registerCommand('googleCloudBuild.openWebPanel', () => this.handleOpenWebPanel(context))
         ];
 
