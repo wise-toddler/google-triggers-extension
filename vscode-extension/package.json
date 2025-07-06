@@ -42,7 +42,7 @@
     "menus": {
       "view/title": [
         {
-          "command": "googleCloudBuild.openPanel",
+          "command": "googleCloudBuild.refresh",
           "when": "view == googleCloudBuildView",
           "group": "navigation"
         }
