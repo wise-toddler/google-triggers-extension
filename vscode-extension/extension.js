@@ -4,550 +4,457 @@ const util = require('util');
 const execAsync = util.promisify(exec);
 
 function activate(context) {
-    console.log('🚀 Google Cloud Build Extension - DEBUG VERSION ACTIVATING');
-    console.log('🔧 Extension Context:', context.extensionPath);
-    console.log('🔧 Extension ID:', context.extension.id);
+    console.log('🚀 Google Cloud Build Extension v2.0 - TreeView Approach');
     
-    // Show info message
-    vscode.window.showInformationMessage('Google Cloud Build Extension Activated! Check logs for details.');
+    // Create tree data provider
+    const treeDataProvider = new GoogleCloudBuildTreeDataProvider();
     
-    try {
-        // Register debug command
-        const debugCommand = vscode.commands.registerCommand('googleCloudBuild.debug', () => {
-            console.log('🔧 DEBUG: Extension is working! Provider should be registered.');
-            console.log('🔧 DEBUG: ViewType is:', GoogleCloudBuildViewProvider.viewType);
-            vscode.window.showInformationMessage('Debug: Extension is working! Check console for ViewType: ' + GoogleCloudBuildViewProvider.viewType);
-        });
-        context.subscriptions.push(debugCommand);
-        console.log('✅ Debug command registered');
-
-        // Register the webview view provider with detailed logging
-        console.log('🔧 Starting webview provider registration...');
-        console.log('🔧 ViewType to register:', GoogleCloudBuildViewProvider.viewType);
-        
-        const provider = new GoogleCloudBuildViewProvider(context.extensionUri);
-        console.log('🔧 Provider instance created:', provider);
-        console.log('🔧 Provider viewType:', provider.constructor.viewType);
-        
-        const providerDisposable = vscode.window.registerWebviewViewProvider(
-            GoogleCloudBuildViewProvider.viewType, 
-            provider,
-            {
-                webviewOptions: {
-                    retainContextWhenHidden: true,
-                }
-            }
-        );
-        
-        console.log('🔧 Provider registration result:', providerDisposable);
-        
-        context.subscriptions.push(providerDisposable);
-        console.log('✅ Webview provider registered successfully');
-        console.log('✅ Provider added to subscriptions');
-
-        // Register refresh command
-        const refreshCommand = vscode.commands.registerCommand('googleCloudBuild.refresh', () => {
-            console.log('🔄 Refresh command triggered');
-            provider.refresh();
+    // Register tree data provider
+    vscode.window.registerTreeDataProvider('googleCloudBuildTree', treeDataProvider);
+    
+    // Register commands
+    const commands = [
+        vscode.commands.registerCommand('googleCloudBuild.refresh', () => {
+            console.log('🔄 Refreshing tree');
+            treeDataProvider.refresh();
             vscode.window.showInformationMessage('Google Cloud Build refreshed');
-        });
-        context.subscriptions.push(refreshCommand);
-        console.log('✅ Refresh command registered');
-
-        console.log('✅ ALL COMMANDS AND PROVIDERS REGISTERED SUCCESSFULLY');
-        console.log('📋 Total subscriptions:', context.subscriptions.length);
+        }),
         
-        // Test if provider is actually registered
-        setTimeout(() => {
-            console.log('🧪 Testing provider registration after 3 seconds...');
-            console.log('🧪 Provider instance still exists:', !!provider);
-            console.log('🧪 ViewType accessible:', GoogleCloudBuildViewProvider.viewType);
-        }, 3000);
+        vscode.commands.registerCommand('googleCloudBuild.checkAuth', async () => {
+            console.log('🔐 Checking authentication');
+            await treeDataProvider.checkAuthStatus();
+        }),
         
-    } catch (error) {
-        console.error('❌ ERROR DURING ACTIVATION:', error);
-        console.error('❌ Error stack:', error.stack);
-        vscode.window.showErrorMessage(`Extension activation failed: ${error.message}`);
-    }
+        vscode.commands.registerCommand('googleCloudBuild.selectProject', async () => {
+            console.log('📂 Selecting project');
+            await treeDataProvider.selectProject();
+        }),
+        
+        vscode.commands.registerCommand('googleCloudBuild.triggerBuild', async (trigger) => {
+            console.log('⚡ Triggering build for:', trigger.label);
+            await treeDataProvider.triggerBuild(trigger);
+        }),
+        
+        vscode.commands.registerCommand('googleCloudBuild.openWebPanel', async () => {
+            console.log('🌐 Opening web panel');
+            await openWebPanel(context);
+        })
+    ];
+    
+    // Add all commands to subscriptions
+    commands.forEach(command => context.subscriptions.push(command));
+    
+    console.log('✅ Google Cloud Build Extension activated successfully');
+    vscode.window.showInformationMessage('Google Cloud Build Extension activated! 🚀');
 }
 
-class GoogleCloudBuildViewProvider {
-    static viewType = 'googleCloudBuildView';
-    
-    constructor(extensionUri) {
-        console.log('🏗️ GoogleCloudBuildViewProvider constructor called');
-        console.log('🏗️ Static viewType:', GoogleCloudBuildViewProvider.viewType);
-        console.log('🏗️ Extension URI:', extensionUri);
-        
-        this._extensionUri = extensionUri;
-        this._view = undefined;
-        
-        console.log('✅ GoogleCloudBuildViewProvider created successfully');
+class GoogleCloudBuildTreeDataProvider {
+    constructor() {
+        this._onDidChangeTreeData = new vscode.EventEmitter();
+        this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+        this.authStatus = null;
+        this.selectedProject = null;
+        this.triggers = [];
+        this.projects = [];
     }
 
     refresh() {
-        console.log('🔄 Refreshing webview');
-        if (this._view) {
-            this._view.webview.html = this._getHtmlForWebview(this._view.webview);
-            console.log('✅ Webview refreshed');
-        } else {
-            console.log('⚠️ No webview to refresh');
+        this._onDidChangeTreeData.fire();
+    }
+
+    getTreeItem(element) {
+        return element;
+    }
+
+    getChildren(element) {
+        if (!element) {
+            // Root level
+            return this.getRootItems();
         }
-    }
-
-    resolveWebviewView(webviewView, context, _token) {
-        console.log('🔧 ===== RESOLVE WEBVIEW VIEW CALLED =====');
-        console.log('🔧 webviewView:', webviewView);
-        console.log('🔧 context:', context);
-        console.log('🔧 webviewView.viewType:', webviewView.viewType);
-        console.log('🔧 Expected viewType:', GoogleCloudBuildViewProvider.viewType);
         
-        this._view = webviewView;
-
-        webviewView.webview.options = {
-            enableScripts: true,
-            localResourceRoots: [this._extensionUri]
-        };
-
-        console.log('🎨 Setting webview HTML');
-        webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-        console.log('✅ Webview HTML set successfully');
-
-        // Handle messages from the webview
-        webviewView.webview.onDidReceiveMessage(
-            async (message) => {
-                console.log('📨 Received message from webview:', message.command);
-                try {
-                    switch (message.command) {
-                        case 'ready':
-                            console.log('✅ Webview is ready');
-                            await this.checkAuthStatus(webviewView.webview);
-                            break;
-                        case 'checkAuth':
-                            console.log('🔐 Checking auth status');
-                            await this.checkAuthStatus(webviewView.webview);
-                            break;
-                        case 'listProjects':
-                            console.log('📋 Listing projects');
-                            await this.listProjects(webviewView.webview);
-                            break;
-                        case 'listTriggers':
-                            console.log('🎯 Listing triggers');
-                            await this.listTriggers(webviewView.webview, message.projectId, message.region);
-                            break;
-                        case 'executeTrigger':
-                            console.log('⚡ Executing trigger');
-                            await this.executeTrigger(webviewView.webview, message.data);
-                            break;
-                        case 'listRecentBuilds':
-                            console.log('📊 Listing recent builds');
-                            await this.listRecentBuilds(webviewView.webview, message.projectId);
-                            break;
-                    }
-                } catch (error) {
-                    console.error('❌ Error handling message:', error);
-                    webviewView.webview.postMessage({
-                        command: 'error',
-                        data: { message: `Error: ${error.message}` }
-                    });
-                }
-            },
-            undefined,
-            context.subscriptions
-        );
-
-        console.log('✅ ===== WEBVIEW FULLY CONFIGURED =====');
+        if (element.contextValue === 'projectsGroup') {
+            return this.getProjectItems();
+        }
+        
+        if (element.contextValue === 'triggersGroup') {
+            return this.getTriggerItems();
+        }
+        
+        return [];
     }
 
-    async checkAuthStatus(webview) {
-        console.log('🔐 Checking gcloud auth status...');
+    getRootItems() {
+        const items = [];
+        
+        // Authentication status
+        const authItem = new vscode.TreeItem(
+            this.authStatus ? `✅ Authenticated: ${this.authStatus}` : '🔒 Not Authenticated',
+            vscode.TreeItemCollapsibleState.None
+        );
+        authItem.contextValue = 'authStatus';
+        authItem.command = {
+            command: 'googleCloudBuild.checkAuth',
+            title: 'Check Authentication'
+        };
+        items.push(authItem);
+
+        // Selected project
+        if (this.selectedProject) {
+            const projectItem = new vscode.TreeItem(
+                `📂 Project: ${this.selectedProject}`,
+                vscode.TreeItemCollapsibleState.None
+            );
+            projectItem.contextValue = 'selectedProject';
+            items.push(projectItem);
+        } else {
+            const selectProjectItem = new vscode.TreeItem(
+                '📂 Select Project',
+                vscode.TreeItemCollapsibleState.None
+            );
+            selectProjectItem.contextValue = 'selectProject';
+            selectProjectItem.command = {
+                command: 'googleCloudBuild.selectProject',
+                title: 'Select Project'
+            };
+            items.push(selectProjectItem);
+        }
+
+        // Triggers group
+        if (this.selectedProject) {
+            const triggersGroup = new vscode.TreeItem(
+                `🎯 Build Triggers (${this.triggers.length})`,
+                vscode.TreeItemCollapsibleState.Expanded
+            );
+            triggersGroup.contextValue = 'triggersGroup';
+            items.push(triggersGroup);
+        }
+
+        return items;
+    }
+
+    getProjectItems() {
+        return this.projects.map(project => {
+            const item = new vscode.TreeItem(project.name, vscode.TreeItemCollapsibleState.None);
+            item.description = project.id;
+            item.contextValue = 'project';
+            return item;
+        });
+    }
+
+    getTriggerItems() {
+        return this.triggers.map(trigger => {
+            const item = new vscode.TreeItem(trigger.name, vscode.TreeItemCollapsibleState.None);
+            item.description = trigger.id;
+            item.contextValue = 'trigger';
+            item.command = {
+                command: 'googleCloudBuild.triggerBuild',
+                title: 'Trigger Build',
+                arguments: [trigger]
+            };
+            item.iconPath = new vscode.ThemeIcon('play');
+            return item;
+        });
+    }
+
+    async checkAuthStatus() {
         try {
-            const { stdout, stderr } = await execAsync('gcloud auth list --filter=status:ACTIVE --format=json');
+            vscode.window.showInformationMessage('Checking authentication...');
+            const { stdout } = await execAsync('gcloud auth list --filter=status:ACTIVE --format=json');
             const accounts = JSON.parse(stdout);
             
             if (accounts && accounts.length > 0) {
-                console.log('✅ User is authenticated:', accounts[0].account);
-                webview.postMessage({
-                    command: 'authStatus',
-                    data: { authenticated: true, account: accounts[0].account }
-                });
+                this.authStatus = accounts[0].account;
+                vscode.window.showInformationMessage(`✅ Authenticated as: ${this.authStatus}`);
+                await this.loadProjects();
             } else {
-                console.log('❌ User is not authenticated');
-                webview.postMessage({
-                    command: 'authStatus',
-                    data: { authenticated: false, account: null }
-                });
+                this.authStatus = null;
+                vscode.window.showWarningMessage('❌ Not authenticated. Run: gcloud auth application-default login');
             }
         } catch (error) {
-            console.error('❌ Auth check failed:', error.message);
-            webview.postMessage({
-                command: 'authStatus',
-                data: { authenticated: false, account: null, error: error.message }
-            });
+            this.authStatus = null;
+            vscode.window.showErrorMessage(`Authentication check failed: ${error.message}`);
+        }
+        
+        this.refresh();
+    }
+
+    async loadProjects() {
+        try {
+            const { stdout } = await execAsync('gcloud projects list --format=json');
+            this.projects = JSON.parse(stdout).map(p => ({
+                id: p.projectId,
+                name: p.name
+            }));
+            console.log(`✅ Loaded ${this.projects.length} projects`);
+        } catch (error) {
+            console.error('Failed to load projects:', error);
+            vscode.window.showErrorMessage(`Failed to load projects: ${error.message}`);
         }
     }
 
-    async listProjects(webview) {
-        console.log('📋 Fetching projects...');
-        try {
-            const { stdout, stderr } = await execAsync('gcloud projects list --format=json');
-            const projects = JSON.parse(stdout);
-            console.log(`✅ Found ${projects.length} projects`);
-            
-            webview.postMessage({
-                command: 'projects',
-                data: projects.map(p => ({
-                    id: p.projectId,
-                    name: p.name,
-                    project_number: p.projectNumber
-                }))
-            });
-        } catch (error) {
-            console.error('❌ Failed to list projects:', error.message);
-            webview.postMessage({
-                command: 'error',
-                data: { message: `Failed to list projects: ${error.message}` }
-            });
+    async selectProject() {
+        if (!this.authStatus) {
+            vscode.window.showWarningMessage('Please authenticate first');
+            return;
+        }
+
+        if (this.projects.length === 0) {
+            await this.loadProjects();
+        }
+
+        const projectItems = this.projects.map(p => ({
+            label: p.name,
+            description: p.id,
+            project: p
+        }));
+
+        const selected = await vscode.window.showQuickPick(projectItems, {
+            placeHolder: 'Select a Google Cloud project'
+        });
+
+        if (selected) {
+            this.selectedProject = selected.project.id;
+            vscode.window.showInformationMessage(`Selected project: ${selected.project.name}`);
+            await this.loadTriggers();
+            this.refresh();
         }
     }
 
-    async listTriggers(webview, projectId, region) {
-        console.log(`🎯 Fetching triggers for project: ${projectId}, region: ${region}`);
+    async loadTriggers() {
+        if (!this.selectedProject) return;
+
         try {
-            let command = `gcloud builds triggers list --project=${projectId} --format=json`;
-            if (region && region !== 'global') {
-                command += ` --region=${region}`;
-            }
+            vscode.window.showInformationMessage('Loading build triggers...');
+            const { stdout } = await execAsync(`gcloud builds triggers list --project=${this.selectedProject} --format=json`);
+            this.triggers = JSON.parse(stdout).map(t => ({
+                id: t.id,
+                name: t.name,
+                description: t.description || '',
+                github_repo: t.github?.name || null,
+                branch: t.github?.push?.branch || null,
+                disabled: t.disabled || false
+            }));
             
-            const { stdout, stderr } = await execAsync(command);
-            const triggers = JSON.parse(stdout);
-            console.log(`✅ Found ${triggers.length} triggers`);
-            
-            webview.postMessage({
-                command: 'triggers',
-                data: triggers.map(t => ({
-                    id: t.id,
-                    name: t.name,
-                    description: t.description || '',
-                    github_repo: t.github?.name || null,
-                    branch: t.github?.push?.branch || null,
-                    disabled: t.disabled || false
-                }))
-            });
+            vscode.window.showInformationMessage(`✅ Loaded ${this.triggers.length} build triggers`);
         } catch (error) {
-            console.error('❌ Failed to list triggers:', error.message);
-            webview.postMessage({
-                command: 'error',
-                data: { message: `Failed to list triggers: ${error.message}` }
-            });
+            console.error('Failed to load triggers:', error);
+            vscode.window.showErrorMessage(`Failed to load triggers: ${error.message}`);
         }
     }
 
-    async executeTrigger(webview, data) {
-        console.log('⚡ Executing trigger:', data.trigger_id);
+    async triggerBuild(trigger) {
+        if (!this.selectedProject || !trigger) return;
+
+        const confirm = await vscode.window.showQuickPick(['Yes', 'No'], {
+            placeHolder: `Trigger build for "${trigger.name}"?`
+        });
+
+        if (confirm !== 'Yes') return;
+
         try {
-            let command = `gcloud builds triggers run ${data.trigger_id} --project=${data.project_id}`;
+            vscode.window.showInformationMessage(`Triggering build: ${trigger.name}...`);
             
-            if (data.region && data.region !== 'global') {
-                command += ` --region=${data.region}`;
-            }
-            
-            if (data.branch) {
-                command += ` --branch=${data.branch}`;
-            }
-            
-            for (const [key, value] of Object.entries(data.substitutions || {})) {
-                command += ` --substitutions=${key}=${value}`;
-            }
-            
-            command += ' --format=json';
-            console.log('🚀 Executing command:', command);
-            
-            const { stdout, stderr } = await execAsync(command);
+            const command = `gcloud builds triggers run ${trigger.id} --project=${this.selectedProject} --format=json`;
+            const { stdout } = await execAsync(command);
             const result = JSON.parse(stdout);
             
-            const buildId = result.name ? result.name.split('/').pop() : null;
-            console.log('✅ Build triggered successfully, ID:', buildId);
+            const buildId = result.name ? result.name.split('/').pop() : 'unknown';
+            vscode.window.showInformationMessage(`✅ Build triggered successfully! Build ID: ${buildId}`);
             
-            webview.postMessage({
-                command: 'triggerExecuted',
-                data: {
-                    success: true,
-                    build_id: buildId,
-                    message: 'Build triggered successfully'
-                }
-            });
         } catch (error) {
-            console.error('❌ Failed to execute trigger:', error.message);
-            webview.postMessage({
-                command: 'error',
-                data: { message: `Failed to execute trigger: ${error.message}` }
-            });
+            console.error('Failed to trigger build:', error);
+            vscode.window.showErrorMessage(`Failed to trigger build: ${error.message}`);
         }
     }
+}
 
-    async listRecentBuilds(webview, projectId) {
-        console.log('📊 Fetching recent builds for project:', projectId);
-        try {
-            const { stdout, stderr } = await execAsync(`gcloud builds list --project=${projectId} --limit=10 --format=json`);
-            const builds = JSON.parse(stdout);
-            console.log(`✅ Found ${builds.length} recent builds`);
-            
-            webview.postMessage({
-                command: 'recentBuilds',
-                data: builds.map(b => ({
-                    id: b.id,
-                    status: b.status,
-                    log_url: b.logUrl,
-                    create_time: b.createTime,
-                    duration: b.timing?.BUILD?.endTime || ''
-                }))
-            });
-        } catch (error) {
-            console.error('❌ Failed to list recent builds:', error.message);
-            webview.postMessage({
-                command: 'error',
-                data: { message: `Failed to list recent builds: ${error.message}` }
-            });
+async function openWebPanel(context) {
+    // Create and show a webview panel
+    const panel = vscode.window.createWebviewPanel(
+        'googleCloudBuildPanel',
+        'Google Cloud Build',
+        vscode.ViewColumn.One,
+        {
+            enableScripts: true,
+            retainContextWhenHidden: true
         }
-    }
+    );
 
-    _getHtmlForWebview(webview) {
-        console.log('🎨 Generating HTML for webview');
-        return `<!DOCTYPE html>
+    // Set the webview's initial html content
+    panel.webview.html = getWebviewContent();
+
+    // Handle messages from the webview
+    panel.webview.onDidReceiveMessage(
+        async (message) => {
+            switch (message.command) {
+                case 'ready':
+                    console.log('Webview ready');
+                    break;
+                case 'openInBrowser':
+                    vscode.env.openExternal(vscode.Uri.parse('http://localhost:3000'));
+                    break;
+            }
+        },
+        undefined,
+        context.subscriptions
+    );
+}
+
+function getWebviewContent() {
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Cloud Build DEBUG</title>
+    <title>Google Cloud Build</title>
     <style>
         body {
-            padding: 10px;
-            margin: 0;
             font-family: var(--vscode-font-family);
-            font-size: var(--vscode-font-size);
             color: var(--vscode-foreground);
             background-color: var(--vscode-editor-background);
-        }
-        .debug-info {
-            background-color: var(--vscode-badge-background);
-            color: var(--vscode-badge-foreground);
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            font-size: 12px;
-        }
-        .loading {
-            text-align: center;
             padding: 20px;
-            color: var(--vscode-descriptionForeground);
+            margin: 0;
         }
-        .section {
-            margin-bottom: 15px;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
         }
-        .section-title {
-            font-weight: bold;
-            margin-bottom: 5px;
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        h1 {
             color: var(--vscode-titleBar-activeForeground);
+            margin-bottom: 10px;
         }
-        select, input, button {
-            width: 100%;
-            padding: 4px 8px;
-            margin-bottom: 5px;
-            background-color: var(--vscode-input-background);
-            border: 1px solid var(--vscode-input-border);
-            color: var(--vscode-input-foreground);
-            font-size: var(--vscode-font-size);
+        .description {
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 30px;
         }
-        button {
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
             background-color: var(--vscode-button-background);
             color: var(--vscode-button-foreground);
-            border: none;
-            cursor: pointer;
-            padding: 8px;
+            text-decoration: none;
+            display: inline-block;
         }
-        button:hover {
+        .btn:hover {
             background-color: var(--vscode-button-hoverBackground);
         }
-        .auth-container {
-            text-align: center;
+        .btn-secondary {
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+        .section {
+            margin: 30px 0;
             padding: 20px;
+            background-color: var(--vscode-editorWidget-background);
+            border-radius: 8px;
         }
-        .auth-command {
-            background-color: var(--vscode-textBlockQuote-background);
-            padding: 8px;
-            border-radius: 4px;
-            font-family: var(--vscode-editor-font-family);
-            font-size: 12px;
-            color: var(--vscode-textPreformat-foreground);
-            margin: 10px 0;
+        .feature {
+            margin: 15px 0;
+            padding: 10px 0;
         }
-        .message {
-            padding: 8px;
-            margin: 5px 0;
-            border-radius: 4px;
-            font-size: 12px;
-            background-color: var(--vscode-input-background);
+        .feature-title {
+            font-weight: bold;
+            margin-bottom: 5px;
         }
-        .hidden { display: none; }
+        .feature-desc {
+            color: var(--vscode-descriptionForeground);
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
-    <div class="debug-info">
-        🐛 DEBUG VERSION - Extension Active
-        <br>Check VSCode Developer Console for detailed logs
-    </div>
-
-    <div id="loadingContainer">
-        <div class="loading">
-            <p>🔄 Loading Google Cloud Build Extension...</p>
-            <p>Checking authentication status...</p>
+    <div class="container">
+        <div class="header">
+            <div class="icon">☁️</div>
+            <h1>Google Cloud Build Extension</h1>
+            <div class="description">
+                Manage your Google Cloud Build triggers directly from Cursor/VSCode
+            </div>
         </div>
-    </div>
 
-    <div id="authRequired" class="auth-container hidden">
-        <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
-        <h3>Authentication Required</h3>
-        <p>Please authenticate with Google Cloud to continue.</p>
-        <div class="auth-command">gcloud auth application-default login</div>
-        <button onclick="checkAuth()">Check Again</button>
-    </div>
-
-    <div id="mainPanel" class="hidden">
-        <div class="section">
-            <div class="section-title">✅ Connected to Google Cloud</div>
-            <p id="userInfo" style="font-size: 12px; color: var(--vscode-descriptionForeground);"></p>
+        <div class="actions">
+            <button class="btn" onclick="openWebInterface()">
+                🌐 Open Web Interface
+            </button>
+            <button class="btn btn-secondary" onclick="refreshTreeView()">
+                🔄 Refresh Tree View
+            </button>
         </div>
 
         <div class="section">
-            <div class="section-title">Project</div>
-            <select id="projectSelect">
-                <option value="">Select a project</option>
-            </select>
+            <h2>🚀 Quick Start</h2>
+            <div class="feature">
+                <div class="feature-title">1. Authenticate</div>
+                <div class="feature-desc">Run: gcloud auth application-default login</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">2. Select Project</div>
+                <div class="feature-desc">Use the tree view to select your Google Cloud project</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">3. Trigger Builds</div>
+                <div class="feature-desc">Click on any trigger in the tree view to start a build</div>
+            </div>
         </div>
 
         <div class="section">
-            <div class="section-title">Region</div>
-            <select id="regionSelect">
-                <option value="global">Global</option>
-                <option value="us-central1">US Central 1</option>
-                <option value="europe-west1">Europe West 1</option>
-            </select>
+            <h2>✨ Features</h2>
+            <div class="feature">
+                <div class="feature-title">🔐 Authentication Status</div>
+                <div class="feature-desc">Check your Google Cloud authentication status</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">📂 Project Selection</div>
+                <div class="feature-desc">Browse and select from your available projects</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">🎯 Build Triggers</div>
+                <div class="feature-desc">View and execute Cloud Build triggers</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">🌐 Web Interface</div>
+                <div class="feature-desc">Full-featured web interface for advanced features</div>
+            </div>
         </div>
-
-        <div class="section">
-            <div class="section-title">Trigger</div>
-            <select id="triggerSelect">
-                <option value="">Select a trigger</option>
-            </select>
-        </div>
-
-        <div class="section">
-            <button onclick="testConnection()">🧪 Test Connection</button>
-        </div>
-
-        <div id="message" class="message hidden"></div>
     </div>
 
     <script>
-        console.log('🎨 Webview script loaded');
         const vscode = acquireVsCodeApi();
-        
-        function hideLoading() {
-            document.getElementById('loadingContainer').classList.add('hidden');
+
+        function openWebInterface() {
+            vscode.postMessage({
+                command: 'openInBrowser'
+            });
         }
 
-        function checkAuth() {
-            console.log('🔐 Requesting auth check');
-            vscode.postMessage({ command: 'checkAuth' });
+        function refreshTreeView() {
+            vscode.postMessage({
+                command: 'refresh'
+            });
         }
 
-        function testConnection() {
-            console.log('🧪 Testing connection');
-            vscode.postMessage({ command: 'checkAuth' });
-            showMessage('Testing connection...', 'info');
-        }
-
-        function showMessage(text, type = 'info') {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = text;
-            messageDiv.classList.remove('hidden');
-            setTimeout(() => {
-                messageDiv.classList.add('hidden');
-            }, 3000);
-        }
-
-        // Handle messages from extension
-        window.addEventListener('message', event => {
-            const message = event.data;
-            console.log('📨 Received message from extension:', message.command, message.data);
-            
-            switch (message.command) {
-                case 'authStatus':
-                    hideLoading();
-                    if (message.data.authenticated) {
-                        document.getElementById('authRequired').classList.add('hidden');
-                        document.getElementById('mainPanel').classList.remove('hidden');
-                        document.getElementById('userInfo').textContent = 'Authenticated as: ' + message.data.account;
-                        vscode.postMessage({ command: 'listProjects' });
-                    } else {
-                        document.getElementById('authRequired').classList.remove('hidden');
-                        document.getElementById('mainPanel').classList.add('hidden');
-                    }
-                    break;
-
-                case 'projects':
-                    const projectSelect = document.getElementById('projectSelect');
-                    projectSelect.innerHTML = '<option value="">Select a project</option>';
-                    message.data.forEach(project => {
-                        const option = document.createElement('option');
-                        option.value = project.id;
-                        option.textContent = project.name + ' (' + project.id + ')';
-                        projectSelect.appendChild(option);
-                    });
-                    showMessage('Projects loaded: ' + message.data.length, 'info');
-                    break;
-
-                case 'triggers':
-                    const triggerSelect = document.getElementById('triggerSelect');
-                    triggerSelect.innerHTML = '<option value="">Select a trigger</option>';
-                    message.data.forEach(trigger => {
-                        const option = document.createElement('option');
-                        option.value = trigger.id;
-                        option.textContent = trigger.name;
-                        triggerSelect.appendChild(option);
-                    });
-                    showMessage('Triggers loaded: ' + message.data.length, 'info');
-                    break;
-
-                case 'error':
-                    showMessage('❌ ' + message.data.message, 'error');
-                    break;
-            }
-        });
-
-        // Event listeners
-        document.getElementById('projectSelect').addEventListener('change', function() {
-            if (this.value) {
-                vscode.postMessage({
-                    command: 'listTriggers',
-                    projectId: this.value,
-                    region: document.getElementById('regionSelect').value
-                });
-            }
-        });
-
-        // Initialize
-        console.log('🚀 Webview initializing...');
+        // Notify extension that webview is ready
         vscode.postMessage({ command: 'ready' });
-        setTimeout(() => {
-            console.log('⏰ Auto-checking auth after 2 seconds');
-            checkAuth();
-        }, 2000);
     </script>
 </body>
 </html>`;
-    }
 }
 
 function deactivate() {

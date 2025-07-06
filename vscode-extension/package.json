@@ -1,9 +1,9 @@
 {
   "publisher": "google-cloud-build",
   "name": "google-cloud-build-extension",
-  "displayName": "Google Cloud Build DEBUG",
-  "description": "Debug version - Manage Google Cloud Build triggers directly from VSCode",
-  "version": "1.0.2",
+  "displayName": "Google Cloud Build Triggers",
+  "description": "Manage Google Cloud Build triggers directly from Cursor/VSCode",
+  "version": "2.0.0",
   "engines": {
     "vscode": "^1.60.0"
   },
@@ -11,7 +11,6 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:googleCloudBuildView",
     "onStartupFinished"
   ],
   "main": "./extension.js",
@@ -19,12 +18,28 @@
     "commands": [
       {
         "command": "googleCloudBuild.refresh",
-        "title": "Refresh Google Cloud Build",
+        "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "googleCloudBuild.debug",
-        "title": "Debug Google Cloud Build Extension"
+        "command": "googleCloudBuild.checkAuth",
+        "title": "Check Authentication",
+        "icon": "$(key)"
+      },
+      {
+        "command": "googleCloudBuild.selectProject",
+        "title": "Select Project",
+        "icon": "$(project)"
+      },
+      {
+        "command": "googleCloudBuild.triggerBuild",
+        "title": "Trigger Build",
+        "icon": "$(play)"
+      },
+      {
+        "command": "googleCloudBuild.openWebPanel",
+        "title": "Open Build Panel",
+        "icon": "$(browser)"
       }
     ],
     "viewsContainers": {
@@ -39,8 +54,8 @@
     "views": {
       "googleCloudBuild": [
         {
-          "id": "googleCloudBuildView",
-          "name": "Cloud Build Triggers",
+          "id": "googleCloudBuildTree",
+          "name": "Build Triggers",
           "when": "true"
         }
       ]
@@ -49,8 +64,25 @@
       "view/title": [
         {
           "command": "googleCloudBuild.refresh",
-          "when": "view == googleCloudBuildView",
+          "when": "view == googleCloudBuildTree",
           "group": "navigation"
+        },
+        {
+          "command": "googleCloudBuild.checkAuth",
+          "when": "view == googleCloudBuildTree",
+          "group": "navigation"
+        },
+        {
+          "command": "googleCloudBuild.openWebPanel",
+          "when": "view == googleCloudBuildTree",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "googleCloudBuild.triggerBuild",
+          "when": "view == googleCloudBuildTree && viewItem == trigger",
+          "group": "inline"
         }
       ]
     }
