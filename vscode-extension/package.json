@@ -26,6 +26,11 @@
         "title": "Check Authentication",
         "icon": "$(key)"
       },
+        {
+        "command": "googleCloudBuild.selectRegion",
+        "title": "Select Region",
+        "icon": "$(globe)"
+      },
       {
         "command": "googleCloudBuild.selectProject",
         "title": "Select Project",
