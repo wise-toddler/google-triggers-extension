@@ -1,7 +1,7 @@
 {
   "publisher": "google-cloud-build",
   "name": "google-cloud-build-extension",
-  "displayName": "Google Cloud Build Triggers v3.0",
+  "displayName": "Google Cloud Build Triggers v4.0 - Pin & Organize",
   "description": "Modular Google Cloud Build triggers manager for Cursor/VSCode",
   "version": "4.0.0",
   "engines": {
