@@ -330,6 +330,43 @@ class CommandHandlers {
         }
     }
 
+    async handleTogglePin(trigger) {
+        try {
+            const triggerId = trigger.triggerId || trigger.id;
+            if (!triggerId) return;
+
+            const isPinned = await this.treeDataProvider.toggleTriggerPin(triggerId);
+            const triggerName = trigger.label || trigger.name || triggerId;
+            
+            if (isPinned) {
+                vscode.window.showInformationMessage(`📌 Pinned trigger: ${triggerName}`);
+            } else {
+                vscode.window.showInformationMessage(`📌 Unpinned trigger: ${triggerName}`);
+            }
+            
+        } catch (error) {
+            console.error('Failed to toggle pin:', error);
+            vscode.window.showErrorMessage(`Failed to toggle pin: ${error.message}`);
+        }
+    }
+
+    async handleClearAllPins() {
+        try {
+            const confirm = await vscode.window.showQuickPick(['Yes', 'No'], {
+                placeHolder: 'Clear all pinned triggers? This will unpin all currently pinned triggers.'
+            });
+            
+            if (confirm === 'Yes') {
+                await this.treeDataProvider.clearAllPins();
+                vscode.window.showInformationMessage('📌 Cleared all pinned triggers');
+            }
+            
+        } catch (error) {
+            console.error('Failed to clear pins:', error);
+            vscode.window.showErrorMessage(`Failed to clear pins: ${error.message}`);
+        }
+    }
+
     async handleOpenWebPanel(context) {
         // Create and show a webview panel
         const panel = vscode.window.createWebviewPanel(
