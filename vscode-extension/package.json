@@ -16,9 +16,9 @@
   "contributes": {
     "commands": [
       {
-        "command": "googleCloudBuild.openPanel",
-        "title": "Open Google Cloud Build Panel",
-        "category": "Google Cloud Build"
+        "command": "googleCloudBuild.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
       }
     ],
     "views": {
