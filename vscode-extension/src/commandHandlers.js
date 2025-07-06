@@ -136,6 +136,7 @@ class CommandHandlers {
             
             // Reload triggers for the new region if project is selected
             if (this.treeDataProvider.selectedProject) {
+                console.log(`🔄 Auto-reloading triggers for region change: ${selected.region.name}`);
                 await this.loadTriggers();
             }
         }
