@@ -358,7 +358,7 @@ class CommandHandlers {
         );
     }
 
-    getSubstitutionWebviewContent(mode, key = '', value = '') {
+    async handleDeleteSubstitution(substitution) {
         const isEdit = mode === 'edit';
         const title = isEdit ? `Edit Substitution Variable` : 'Add Substitution Variable';
         const keyDisabled = isEdit ? 'readonly' : '';
