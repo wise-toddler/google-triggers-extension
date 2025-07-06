@@ -44,6 +44,11 @@ function activate(context) {
             console.log('⚙️ Configuring substitutions for:', trigger.label);
             await treeDataProvider.configureSubstitutions(trigger);
         }),
+        
+        vscode.commands.registerCommand('googleCloudBuild.openWebPanel', async () => {
+            console.log('🌐 Opening web panel');
+            await openWebPanel(context);
+        }),
     ];
     
     // Add all commands to subscriptions
