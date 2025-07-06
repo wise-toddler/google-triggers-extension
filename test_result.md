@@ -107,75 +107,93 @@ user_problem_statement: "Build a VSCode extension that fetches Google Cloud Buil
 backend:
   - task: "Google Cloud Authentication Status Check"
     implemented: true
-    working: "NA"
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented gcloud auth status check endpoint using gcloud CLI commands"
+        - working: false
+          agent: "testing"
+          comment: "Endpoint returns 500 error: 'No such file or directory: gcloud'. The backend code is correctly implemented but requires gcloud CLI to be installed in the environment."
 
   - task: "Google Cloud Projects Listing"
     implemented: true
-    working: "NA"
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented projects listing endpoint using gcloud CLI commands"
+        - working: false
+          agent: "testing"
+          comment: "Endpoint returns 500 error: 'Failed to list projects: 500: Command execution failed: [Errno 2] No such file or directory: gcloud'. The backend code is correctly implemented but requires gcloud CLI to be installed."
 
   - task: "Google Cloud Regions Listing"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented regions listing with static list of Google Cloud regions"
+        - working: true
+          agent: "testing"
+          comment: "Endpoint works correctly and returns a list of 23 Google Cloud regions. This endpoint doesn't rely on gcloud CLI so it works without external dependencies."
 
   - task: "Google Cloud Build Triggers Listing"
     implemented: true
-    working: "NA"
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented triggers listing endpoint using gcloud builds triggers list commands"
+        - working: false
+          agent: "testing"
+          comment: "Endpoint returns 500 error: 'Failed to list triggers: 500: Command execution failed: [Errno 2] No such file or directory: gcloud'. The backend code is correctly implemented but requires gcloud CLI to be installed."
 
   - task: "Google Cloud Build Trigger Execution"
     implemented: true
-    working: "NA"
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented trigger execution endpoint with substitutions support using gcloud builds triggers run"
+        - working: false
+          agent: "testing"
+          comment: "Endpoint returns 500 error: 'Failed to execute trigger: 500: Command execution failed: [Errno 2] No such file or directory: gcloud'. The backend code is correctly implemented but requires gcloud CLI to be installed."
 
   - task: "Build Status and Recent Builds"
     implemented: true
-    working: "NA"
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented build status check and recent builds listing endpoints"
+        - working: false
+          agent: "testing"
+          comment: "Not explicitly tested, but would have the same issue as other endpoints that rely on gcloud CLI commands."
 
 frontend:
   - task: "VSCode-like Side Panel Interface"
