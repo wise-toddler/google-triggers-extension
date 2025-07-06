@@ -340,6 +340,52 @@ class GoogleCloudBuildTreeDataProvider {
         }
     }
 
+    async selectBranch() {
+        const commonBranches = [
+            { label: 'main', description: 'Main branch' },
+            { label: 'master', description: 'Master branch' },
+            { label: 'develop', description: 'Development branch' },
+            { label: 'staging', description: 'Staging branch' },
+            { label: 'production', description: 'Production branch' },
+            { label: '$(edit) Custom...', description: 'Enter custom branch name' }
+        ];
+
+        const selected = await vscode.window.showQuickPick(commonBranches, {
+            placeHolder: `Current branch: ${this.selectedBranch}. Select a new branch:`
+        });
+
+        if (selected) {
+            if (selected.label.includes('Custom...')) {
+                const customBranch = await vscode.window.showInputBox({
+                    prompt: 'Enter branch name',
+                    value: this.selectedBranch,
+                    placeHolder: 'feature/my-branch'
+                });
+                
+                if (customBranch) {
+                    this.selectedBranch = customBranch;
+                    this.saveState();
+                    vscode.window.showInformationMessage(`Selected branch: ${customBranch}`);
+                    this.refresh();
+                }
+            } else {
+                this.selectedBranch = selected.label;
+                this.saveState();
+                vscode.window.showInformationMessage(`Selected branch: ${selected.label}`);
+                this.refresh();
+            }
+        }
+    }
+
+    saveState() {
+        // Save current state to persistent storage
+        this.context.globalState.update('selectedProject', this.selectedProject);
+        this.context.globalState.update('selectedRegion', this.selectedRegion);
+        this.context.globalState.update('selectedBranch', this.selectedBranch);
+        this.context.globalState.update('substitutions', this.substitutions);
+        console.log('💾 State saved to persistent storage');
+    }
+
     async selectRegion() {
         const regionItems = this.regions.map(r => ({
             label: r.name,
