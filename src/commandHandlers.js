@@ -281,15 +281,17 @@ class CommandHandlers {
             }
             
             // Show detailed command to user
-            const subsEntries = Object.entries(allSubstitutions);
             let commandPreview = `gcloud builds triggers run ${trigger.id} --project=${this.treeDataProvider.selectedProject}`;
             if (this.treeDataProvider.selectedRegion !== 'global') {
                 commandPreview += ` --region=${this.treeDataProvider.selectedRegion}`;
             }
             commandPreview += ` --branch=${branchName}`;
+            
+            // Add substitutions in correct comma-separated format
+            const subsEntries = Object.entries(allSubstitutions);
             if (subsEntries.length > 0) {
-                const subsStr = subsEntries.map(([k, v]) => `${k}=${v}`).join(' --substitutions=');
-                commandPreview += ` --substitutions=${subsStr}`;
+                const subsString = subsEntries.map(([k, v]) => `${k}=${v}`).join(',');
+                commandPreview += ` --substitutions=${subsString}`;
             }
             
             this.outputChannel.appendLine('💻 Final Command:');
