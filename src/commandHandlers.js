@@ -257,6 +257,20 @@ class CommandHandlers {
 
             vscode.window.showInformationMessage(`Triggering build: ${trigger.name} (${branchName}) in ${regionName}...`);
             
+            // Show detailed command to user
+            const subsEntries = Object.entries(allSubstitutions);
+            let commandPreview = `gcloud builds triggers run ${trigger.id} --project=${this.treeDataProvider.selectedProject}`;
+            if (this.treeDataProvider.selectedRegion !== 'global') {
+                commandPreview += ` --region=${this.treeDataProvider.selectedRegion}`;
+            }
+            commandPreview += ` --branch=${branchName}`;
+            if (subsEntries.length > 0) {
+                const subsStr = subsEntries.map(([k, v]) => `${k}=${v}`).join(' --substitutions=');
+                commandPreview += ` --substitutions=${subsStr}`;
+            }
+            
+            console.log('🎯 User Command Preview:', commandPreview);
+            
             const result = await this.gcloudService.triggerBuild(
                 trigger.id,
                 this.treeDataProvider.selectedProject,
