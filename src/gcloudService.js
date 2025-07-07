@@ -92,9 +92,12 @@ class GCloudService {
                 command += ` --branch=${branch}`;
             }
             
-            // Add substitutions
-            for (const [key, value] of Object.entries(substitutions)) {
-                command += ` --substitutions=${key}=${value}`;
+            // Add substitutions (comma-separated format)
+            if (Object.keys(substitutions).length > 0) {
+                const subsString = Object.entries(substitutions)
+                    .map(([key, value]) => `${key}=${value}`)
+                    .join(',');
+                command += ` --substitutions=${subsString}`;
             }
             
             // Detailed logging
