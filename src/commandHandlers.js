@@ -3,9 +3,10 @@ const vscode = require('vscode');
 const { REGIONS, COMMON_BRANCHES } = require('./constants');
 
 class CommandHandlers {
-    constructor(treeDataProvider, gcloudService) {
+    constructor(treeDataProvider, gcloudService, outputChannel) {
         this.treeDataProvider = treeDataProvider;
         this.gcloudService = gcloudService;
+        this.outputChannel = outputChannel;
     }
 
     // Register all commands
