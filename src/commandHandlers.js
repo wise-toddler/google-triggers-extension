@@ -243,7 +243,7 @@ class CommandHandlers {
             confirmMessage += `\nBranch: ${branchName}`;
             confirmMessage += `\nRegion: ${regionName}`;
             if (subsCount > 0) {
-                const subsPreview = Object.entries(substitutions)
+                const subsPreview = Object.entries(allSubstitutions)
                     .map(([k, v]) => `${k}=${v}`)
                     .join(', ');
                 confirmMessage += `\nSubstitutions (${subsCount}): ${subsPreview}`;
