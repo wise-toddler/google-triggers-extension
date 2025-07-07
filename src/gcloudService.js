@@ -97,7 +97,15 @@ class GCloudService {
                 command += ` --substitutions=${key}=${value}`;
             }
             
-            console.log('🚀 Executing build command:', command);
+            // Detailed logging
+            console.log('🚀 ===== EXECUTING GCLOUD BUILD COMMAND =====');
+            console.log('📝 Command:', command);
+            console.log('🎯 Trigger ID:', triggerId);
+            console.log('📂 Project:', projectId);
+            console.log('🌍 Region:', region);
+            console.log('🌿 Branch:', branch);
+            console.log('⚙️ Substitutions:', substitutions);
+            console.log('===============================================');
             
             const { stdout } = await execAsync(command);
             const result = JSON.parse(stdout);
