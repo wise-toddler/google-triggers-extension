@@ -313,10 +313,25 @@ class CommandHandlers {
             }
             successMessage += `\n\n📋 Executed Command:\n${commandPreview}`;
             
+            // Log success to Extension Host
+            this.outputChannel.appendLine('');
+            this.outputChannel.appendLine('✅ BUILD TRIGGERED SUCCESSFULLY!');
+            this.outputChannel.appendLine(`🆔 Build ID: ${result.buildId}`);
+            this.outputChannel.appendLine(`🕒 Triggered at: ${new Date().toISOString()}`);
+            this.outputChannel.appendLine('===============================================');
+            
             vscode.window.showInformationMessage(successMessage);
             
         } catch (error) {
             console.error('Failed to trigger build:', error);
+            
+            // Log error to Extension Host
+            this.outputChannel.appendLine('');
+            this.outputChannel.appendLine('❌ BUILD TRIGGER FAILED!');
+            this.outputChannel.appendLine(`🚨 Error: ${error.message}`);
+            this.outputChannel.appendLine(`🕒 Failed at: ${new Date().toISOString()}`);
+            this.outputChannel.appendLine('===============================================');
+            
             vscode.window.showErrorMessage(`Failed to trigger build: ${error.message}`);
         }
     }
