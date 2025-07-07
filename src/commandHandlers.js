@@ -284,6 +284,8 @@ class CommandHandlers {
             if (subsCount > 0) {
                 successMessage += ` | ${subsCount} substitution(s)`;
             }
+            successMessage += `\n\n📋 Executed Command:\n${commandPreview}`;
+            
             vscode.window.showInformationMessage(successMessage);
             
         } catch (error) {
