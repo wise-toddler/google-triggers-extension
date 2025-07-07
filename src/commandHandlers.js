@@ -262,7 +262,7 @@ class CommandHandlers {
                 this.treeDataProvider.selectedProject,
                 this.treeDataProvider.selectedRegion,
                 branchName, // Use the branch entered by user
-                substitutions
+                allSubstitutions // Use merged substitutions (defaults + user overrides)
             );
             
             let successMessage = `✅ Build triggered successfully! Build ID: ${result.buildId}`;
