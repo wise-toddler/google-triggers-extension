@@ -10,6 +10,9 @@ const CommandHandlers = require('./src/commandHandlers');
 function activate(context) {
     console.log('🚀 Google Cloud Build Extension v3.0 - Modular Architecture');
     
+    // Create output channel for detailed logging
+    const outputChannel = vscode.window.createOutputChannel('Google Cloud Build');
+    
     try {
         // Initialize services
         const stateManager = new StateManager(context);
@@ -21,13 +24,14 @@ function activate(context) {
         // Register tree data provider
         vscode.window.registerTreeDataProvider('googleCloudBuildTree', treeDataProvider);
         
-        // Create command handlers
-        const commandHandlers = new CommandHandlers(treeDataProvider, gcloudService);
+        // Create command handlers with output channel
+        const commandHandlers = new CommandHandlers(treeDataProvider, gcloudService, outputChannel);
         
         // Register all commands
         commandHandlers.registerCommands(context);
         
         console.log('✅ Google Cloud Build Extension activated successfully');
+        outputChannel.appendLine('✅ Google Cloud Build Extension activated successfully');
         vscode.window.showInformationMessage('Google Cloud Build Extension v3.0 activated! 🚀');
         
         // Auto-load previous state if available
