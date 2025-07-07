@@ -258,6 +258,28 @@ class CommandHandlers {
 
             vscode.window.showInformationMessage(`Triggering build: ${trigger.name} (${branchName}) in ${regionName}...`);
             
+            // Log to Extension Host logs
+            this.outputChannel.appendLine('');
+            this.outputChannel.appendLine('🚀 ===== EXECUTING GCLOUD BUILD COMMAND =====');
+            this.outputChannel.appendLine(`🎯 Trigger: ${trigger.name} (ID: ${trigger.id})`);
+            this.outputChannel.appendLine(`📂 Project: ${this.treeDataProvider.selectedProject}`);
+            this.outputChannel.appendLine(`🌍 Region: ${this.treeDataProvider.selectedRegion} (${regionName})`);
+            this.outputChannel.appendLine(`🌿 Branch: ${branchName}`);
+            this.outputChannel.appendLine(`⚙️ Substitutions Count: ${subsCount}`);
+            
+            if (subsCount > 0) {
+                this.outputChannel.appendLine('📋 Substitution Details:');
+                Object.entries(allSubstitutions).forEach(([key, value]) => {
+                    const isDefault = trigger.substitutions && trigger.substitutions.hasOwnProperty(key);
+                    const isUserModified = this.treeDataProvider.substitutions[trigger.id] && this.treeDataProvider.substitutions[trigger.id].hasOwnProperty(key);
+                    let type = 'custom';
+                    if (isDefault && !isUserModified) type = 'default';
+                    if (isDefault && isUserModified) type = 'modified';
+                    
+                    this.outputChannel.appendLine(`   ${key} = ${value} (${type})`);
+                });
+            }
+            
             // Show detailed command to user
             const subsEntries = Object.entries(allSubstitutions);
             let commandPreview = `gcloud builds triggers run ${trigger.id} --project=${this.treeDataProvider.selectedProject}`;
@@ -269,6 +291,10 @@ class CommandHandlers {
                 const subsStr = subsEntries.map(([k, v]) => `${k}=${v}`).join(' --substitutions=');
                 commandPreview += ` --substitutions=${subsStr}`;
             }
+            
+            this.outputChannel.appendLine('💻 Final Command:');
+            this.outputChannel.appendLine(`   ${commandPreview}`);
+            this.outputChannel.appendLine('===============================================');
             
             console.log('🎯 User Command Preview:', commandPreview);
             
