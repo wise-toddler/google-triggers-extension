@@ -230,8 +230,14 @@ class CommandHandlers {
 
             const branchName = branchInput.trim();
             const regionName = REGIONS.find(r => r.id === this.treeDataProvider.selectedRegion)?.name || this.treeDataProvider.selectedRegion;
-            const substitutions = this.treeDataProvider.substitutions[trigger.id] || {};
-            const subsCount = Object.keys(substitutions).length;
+            
+            // Get merged substitutions (defaults + user overrides)
+            const triggerData = this.treeDataProvider.triggers.find(t => t.id === trigger.id);
+            const defaultSubstitutions = triggerData?.substitutions || {};
+            const userSubstitutions = this.treeDataProvider.substitutions[trigger.id] || {};
+            const allSubstitutions = { ...defaultSubstitutions, ...userSubstitutions };
+            
+            const subsCount = Object.keys(allSubstitutions).length;
             
             let confirmMessage = `Trigger build for "${trigger.name}"?`;
             confirmMessage += `\nBranch: ${branchName}`;
