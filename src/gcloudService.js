@@ -77,6 +77,25 @@ class GCloudService {
         }
     }
 
+    // Helper method to escape shell arguments
+    escapeShellArg(arg) {
+        // Handle null/undefined values
+        if (arg == null) {
+            return '""';
+        }
+        
+        // Convert to string
+        const str = String(arg);
+        
+        // If the string is simple (alphanumeric, hyphens, underscores, dots), no escaping needed
+        if (/^[a-zA-Z0-9._-]+$/.test(str)) {
+            return str;
+        }
+        
+        // For complex strings, wrap in single quotes and escape any single quotes
+        return "'" + str.replace(/'/g, "'\"'\"'") + "'";
+    }
+
     // Execute a build trigger
     async triggerBuild(triggerId, projectId, region, branch, substitutions = {}) {
         try {
@@ -92,12 +111,12 @@ class GCloudService {
                 command += ` --branch=${branch}`;
             }
             
-            // Add substitutions (comma-separated format)
+            // Add substitutions (comma-separated format with proper escaping)
             if (Object.keys(substitutions).length > 0) {
                 const subsString = Object.entries(substitutions)
-                    .map(([key, value]) => `${key}=${value}`)
+                    .map(([key, value]) => `${key}=${this.escapeShellArg(value)}`)
                     .join(',');
-                command += ` --substitutions=${subsString}`;
+                command += ` --substitutions=${this.escapeShellArg(subsString)}`;
             }
             
             // Detailed logging
