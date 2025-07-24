@@ -343,6 +343,32 @@ class CommandHandlers {
             
             vscode.window.showInformationMessage(successMessage);
             
+            // Start monitoring the build
+            console.log(`🔍 Starting build monitoring for: ${result.buildId}`);
+            this.treeDataProvider.startBuildMonitoring(
+                result.buildId,
+                this.treeDataProvider.selectedProject,
+                this.treeDataProvider.selectedRegion,
+                (status) => {
+                    // Update user on significant status changes
+                    const statusIcon = this.treeDataProvider.getBuildStatusIcon(status.status);
+                    console.log(`📊 Build ${result.buildId}: ${status.status} (${status.duration})`);
+                    
+                    if (status.status === 'SUCCESS') {
+                        vscode.window.showInformationMessage(
+                            `✅ Build completed successfully! ${result.buildId} (${status.duration})`
+                        );
+                    } else if (status.status === 'FAILURE') {
+                        vscode.window.showErrorMessage(
+                            `❌ Build failed: ${result.buildId} (${status.duration})`
+                        );
+                    }
+                }
+            );
+            
+            // Refresh recent builds after triggering
+            setTimeout(() => this.loadRecentBuilds(), 2000);
+            
         } catch (error) {
             console.error('Failed to trigger build:', error);
             
