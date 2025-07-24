@@ -628,6 +628,61 @@ class CommandHandlers {
             await this.treeDataProvider.setRecentBuilds([]);
         }
     }
+
+    async handleViewBuildLogs(build) {
+        if (!build || !build.buildId) return;
+
+        try {
+            vscode.window.showInformationMessage(`Loading logs for build: ${build.buildId}...`);
+            
+            const logs = await this.gcloudService.getBuildLogs(
+                build.buildId,
+                this.treeDataProvider.selectedProject,
+                this.treeDataProvider.selectedRegion,
+                100 // Get first 100 lines
+            );
+
+            // Create a new document to show the logs
+            const doc = await vscode.workspace.openTextDocument({
+                content: logs,
+                language: 'log'
+            });
+            
+            await vscode.window.showTextDocument(doc);
+            
+        } catch (error) {
+            console.error('Failed to load build logs:', error);
+            vscode.window.showErrorMessage(`Failed to load build logs: ${error.message}`);
+        }
+    }
+
+    async handleRefreshBuilds() {
+        if (!this.treeDataProvider.selectedProject) {
+            vscode.window.showWarningMessage('No project selected');
+            return;
+        }
+
+        try {
+            vscode.window.showInformationMessage('Refreshing builds...');
+            await this.loadRecentBuilds();
+            vscode.window.showInformationMessage('✅ Builds refreshed');
+        } catch (error) {
+            console.error('Failed to refresh builds:', error);
+            vscode.window.showErrorMessage(`Failed to refresh builds: ${error.message}`);
+        }
+    }
+
+    async handleStopBuildMonitoring(build) {
+        if (!build || !build.buildId) return;
+
+        try {
+            this.treeDataProvider.stopBuildMonitoring(build.buildId);
+            vscode.window.showInformationMessage(`Stopped monitoring build: ${build.buildId}`);
+        } catch (error) {
+            console.error('Failed to stop build monitoring:', error);
+            vscode.window.showErrorMessage(`Failed to stop build monitoring: ${error.message}`);
+        }
+    }
 }
 
 module.exports = CommandHandlers;
