@@ -136,6 +136,11 @@
           "command": "googleCloudBuild.openWebPanel",
           "when": "view == googleCloudBuildTree",
           "group": "navigation"
+        },
+        {
+          "command": "googleCloudBuild.refreshBuilds",
+          "when": "view == googleCloudBuildTree",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
