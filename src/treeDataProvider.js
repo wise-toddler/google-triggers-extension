@@ -22,6 +22,8 @@ class GoogleCloudBuildTreeDataProvider {
         
         this.triggers = [];
         this.projects = [];
+        this.recentBuilds = [];
+        this.activeBuilds = new Map(); // Track builds being monitored
     }
 
     refresh() {
