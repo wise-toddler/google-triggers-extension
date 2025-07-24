@@ -4,28 +4,54 @@ const util = require('util');
 const execAsync = util.promisify(exec);
 
 class GCloudService {
-    // Check authentication status
+    // Enhanced authentication check with application default credentials validation
     async checkAuthStatus() {
         try {
-            const { stdout } = await execAsync('gcloud auth list --filter=status:ACTIVE --format=json');
-            const accounts = JSON.parse(stdout);
+            // Check both regular auth and application default credentials
+            const [authResult, adcResult] = await Promise.allSettled([
+                execAsync('gcloud auth list --filter=status:ACTIVE --format=json'),
+                execAsync('gcloud auth application-default print-access-token')
+            ]);
             
-            if (accounts && accounts.length > 0) {
-                return {
-                    authenticated: true,
-                    account: accounts[0].account
-                };
-            } else {
-                return {
-                    authenticated: false,
-                    account: null
-                };
+            let regularAuth = { authenticated: false, account: null };
+            let adcAuth = { authenticated: false };
+            
+            // Check regular authentication
+            if (authResult.status === 'fulfilled') {
+                const accounts = JSON.parse(authResult.value.stdout);
+                if (accounts && accounts.length > 0) {
+                    regularAuth = {
+                        authenticated: true,
+                        account: accounts[0].account
+                    };
+                }
             }
+            
+            // Check application default credentials
+            if (adcResult.status === 'fulfilled') {
+                adcAuth.authenticated = true;
+            }
+            
+            return {
+                authenticated: regularAuth.authenticated && adcAuth.authenticated,
+                account: regularAuth.account,
+                details: {
+                    regularAuth: regularAuth.authenticated,
+                    applicationDefaultCredentials: adcAuth.authenticated,
+                    issue: !regularAuth.authenticated ? 'No active gcloud auth' :
+                           !adcAuth.authenticated ? 'No application default credentials' : null
+                }
+            };
         } catch (error) {
             return {
                 authenticated: false,
                 account: null,
-                error: error.message
+                error: error.message,
+                details: {
+                    regularAuth: false,
+                    applicationDefaultCredentials: false,
+                    issue: 'Authentication check failed'
+                }
             };
         }
     }
@@ -137,7 +163,8 @@ class GCloudService {
             return {
                 success: true,
                 buildId: buildId,
-                result: result
+                result: result,
+                fullName: result.name // Full resource name for status tracking
             };
         } catch (error) {
             console.error('Failed to trigger build:', error);
@@ -145,23 +172,136 @@ class GCloudService {
         }
     }
 
-    // List recent builds for a project
-    async listRecentBuilds(projectId, limit = 10) {
+    // Get specific build status
+    async getBuildStatus(buildId, projectId, region = 'global') {
         try {
-            const { stdout } = await execAsync(`gcloud builds list --project=${projectId} --limit=${limit} --format=json`);
+            let command = `gcloud builds describe ${buildId} --project=${projectId} --format=json`;
+            
+            if (region && region !== 'global') {
+                command += ` --region=${region}`;
+            }
+            
+            const { stdout } = await execAsync(command);
+            const build = JSON.parse(stdout);
+            
+            return {
+                id: build.id,
+                status: build.status,
+                createTime: build.createTime,
+                startTime: build.startTime,
+                finishTime: build.finishTime,
+                duration: this.calculateDuration(build.startTime, build.finishTime),
+                logUrl: build.logUrl,
+                sourceProvenanceHash: build.sourceProvenance?.resolvedRepoSource?.commitSha?.substring(0, 7) || 'unknown',
+                steps: build.steps ? build.steps.length : 0,
+                triggerName: build.substitutions?._TRIGGER_NAME || 'Manual',
+                branch: build.substitutions?._BRANCH_NAME || build.substitutions?.BRANCH_NAME || 'unknown'
+            };
+        } catch (error) {
+            console.error('Failed to get build status:', error);
+            throw new Error(`Failed to get build status: ${error.message}`);
+        }
+    }
+
+    // Helper to calculate duration
+    calculateDuration(startTime, finishTime) {
+        if (!startTime || !finishTime) return 'In progress...';
+        
+        const start = new Date(startTime);
+        const finish = new Date(finishTime);
+        const diffMs = finish - start;
+        
+        const minutes = Math.floor(diffMs / 60000);
+        const seconds = Math.floor((diffMs % 60000) / 1000);
+        
+        if (minutes > 0) {
+            return `${minutes}m ${seconds}s`;
+        }
+        return `${seconds}s`;
+    }
+
+    // List recent builds for a project with enhanced details
+    async listRecentBuilds(projectId, region = 'global', limit = 20) {
+        try {
+            let command = `gcloud builds list --project=${projectId} --limit=${limit} --format=json`;
+            
+            if (region && region !== 'global') {
+                command += ` --region=${region}`;
+            }
+            
+            const { stdout } = await execAsync(command);
             const builds = JSON.parse(stdout);
             
             return builds.map(b => ({
                 id: b.id,
                 status: b.status,
-                logUrl: b.logUrl,
                 createTime: b.createTime,
-                duration: b.timing?.BUILD?.endTime || ''
+                startTime: b.startTime,
+                finishTime: b.finishTime,
+                duration: this.calculateDuration(b.startTime, b.finishTime),
+                logUrl: b.logUrl,
+                sourceProvenanceHash: b.sourceProvenance?.resolvedRepoSource?.commitSha?.substring(0, 7) || 'unknown',
+                triggerName: b.substitutions?._TRIGGER_NAME || 'Manual',
+                branch: b.substitutions?._BRANCH_NAME || b.substitutions?.BRANCH_NAME || 'unknown',
+                region: region
             }));
         } catch (error) {
             console.error('Failed to list recent builds:', error);
             throw new Error(`Failed to list recent builds: ${error.message}`);
         }
+    }
+
+    // Get build logs (first 50 lines)
+    async getBuildLogs(buildId, projectId, region = 'global', lines = 50) {
+        try {
+            let command = `gcloud builds log ${buildId} --project=${projectId}`;
+            
+            if (region && region !== 'global') {
+                command += ` --region=${region}`;
+            }
+            
+            // Add limit to avoid overwhelming output
+            command += ` | head -${lines}`;
+            
+            const { stdout } = await execAsync(command);
+            return stdout;
+        } catch (error) {
+            console.error('Failed to get build logs:', error);
+            return `Failed to retrieve logs: ${error.message}`;
+        }
+    }
+
+    // Stream build status updates (for monitoring active builds)
+    async monitorBuild(buildId, projectId, region, onStatusUpdate, maxChecks = 60) {
+        let checkCount = 0;
+        const checkInterval = 10000; // 10 seconds
+        
+        return new Promise((resolve, reject) => {
+            const monitor = setInterval(async () => {
+                try {
+                    checkCount++;
+                    const status = await this.getBuildStatus(buildId, projectId, region);
+                    
+                    onStatusUpdate(status);
+                    
+                    // Stop monitoring if build is complete or failed
+                    if (['SUCCESS', 'FAILURE', 'TIMEOUT', 'CANCELLED'].includes(status.status)) {
+                        clearInterval(monitor);
+                        resolve(status);
+                        return;
+                    }
+                    
+                    // Stop after max checks to prevent infinite monitoring
+                    if (checkCount >= maxChecks) {
+                        clearInterval(monitor);
+                        resolve(status);
+                    }
+                } catch (error) {
+                    clearInterval(monitor);
+                    reject(error);
+                }
+            }, checkInterval);
+        });
     }
 }
 
