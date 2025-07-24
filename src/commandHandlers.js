@@ -575,6 +575,30 @@ class CommandHandlers {
 </body>
 </html>`;
     }
+
+    async loadRecentBuilds() {
+        if (!this.treeDataProvider.selectedProject) {
+            console.log('⚠️ No project selected, skipping builds loading');
+            return;
+        }
+
+        try {
+            console.log('📊 Loading recent builds...');
+            
+            const builds = await this.gcloudService.listRecentBuilds(
+                this.treeDataProvider.selectedProject,
+                this.treeDataProvider.selectedRegion,
+                15
+            );
+            
+            await this.treeDataProvider.setRecentBuilds(builds);
+            console.log(`✅ Loaded ${builds.length} recent builds`);
+            
+        } catch (error) {
+            console.error('Failed to load recent builds:', error);
+            await this.treeDataProvider.setRecentBuilds([]);
+        }
+    }
 }
 
 module.exports = CommandHandlers;
