@@ -121,6 +121,10 @@ class GoogleCloudBuildTreeDataProvider {
             triggersGroup.contextValue = 'triggersGroup';
             triggersGroup.tooltip = `Total: ${pinStats.total} | Pinned: ${pinStats.pinned} | Unpinned: ${pinStats.unpinned}`;
             items.push(triggersGroup);
+
+            // Add builds section if we have a project
+            const buildsItems = this.getBuildsItems();
+            items.push(...buildsItems);
         }
 
         return items;
