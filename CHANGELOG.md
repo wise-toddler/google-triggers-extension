@@ -1,5 +1,26 @@
 # Change Log
 
+## [0.0.3] - 2025-07-24
+
+### Added
+- **Real-time Build Status Tracking** - Monitor build progress after triggering with live status updates
+- **Enhanced Authentication Validation** - Improved auth checking with specific error messages for different auth issues
+- **Build History View** - View recent builds with status, duration, and trigger information
+- **Build Log Viewer** - Click on builds to view their logs directly in VSCode
+- **Active Build Monitoring** - See currently running builds with real-time duration tracking
+- **Automatic Build Refresh** - Recent builds automatically refresh after triggering new builds
+
+### Enhanced
+- **Better Authentication Error Messages** - Specific guidance for `gcloud auth login` vs `gcloud auth application-default login`
+- **Build Status Icons** - Visual indicators for build states (✅ Success, ❌ Failure, 🔄 Working, etc.)
+- **Improved Tree View** - Added build sections alongside triggers for comprehensive project overview
+- **Enhanced Logging** - Better build monitoring and status update logging
+
+### Fixed
+- **Authentication Issues** - Fixed cases where extension showed authenticated but builds failed
+- **Build Status Visibility** - Users can now see what happened to their triggered builds
+- **Missing Feedback** - Added notifications for build completion and failure states
+
 ## [0.0.2] - 2025-07-18
 
 ### Fixed
