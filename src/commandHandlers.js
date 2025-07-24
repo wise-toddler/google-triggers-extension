@@ -3,9 +3,10 @@ const vscode = require('vscode');
 const { REGIONS, COMMON_BRANCHES } = require('./constants');
 
 class CommandHandlers {
-    constructor(treeDataProvider, gcloudService) {
+    constructor(treeDataProvider, gcloudService, outputChannel) {
         this.treeDataProvider = treeDataProvider;
         this.gcloudService = gcloudService;
+        this.outputChannel = outputChannel;
     }
 
     // Register all commands
@@ -230,14 +231,20 @@ class CommandHandlers {
 
             const branchName = branchInput.trim();
             const regionName = REGIONS.find(r => r.id === this.treeDataProvider.selectedRegion)?.name || this.treeDataProvider.selectedRegion;
-            const substitutions = this.treeDataProvider.substitutions[trigger.id] || {};
-            const subsCount = Object.keys(substitutions).length;
+            
+            // Get merged substitutions (defaults + user overrides)
+            const triggerData = this.treeDataProvider.triggers.find(t => t.id === trigger.id);
+            const defaultSubstitutions = triggerData?.substitutions || {};
+            const userSubstitutions = this.treeDataProvider.substitutions[trigger.id] || {};
+            const allSubstitutions = { ...defaultSubstitutions, ...userSubstitutions };
+            
+            const subsCount = Object.keys(allSubstitutions).length;
             
             let confirmMessage = `Trigger build for "${trigger.name}"?`;
             confirmMessage += `\nBranch: ${branchName}`;
             confirmMessage += `\nRegion: ${regionName}`;
             if (subsCount > 0) {
-                const subsPreview = Object.entries(substitutions)
+                const subsPreview = Object.entries(allSubstitutions)
                     .map(([k, v]) => `${k}=${v}`)
                     .join(', ');
                 confirmMessage += `\nSubstitutions (${subsCount}): ${subsPreview}`;
@@ -251,12 +258,54 @@ class CommandHandlers {
 
             vscode.window.showInformationMessage(`Triggering build: ${trigger.name} (${branchName}) in ${regionName}...`);
             
+            // Log to Extension Host logs
+            this.outputChannel.appendLine('');
+            this.outputChannel.appendLine('🚀 ===== EXECUTING GCLOUD BUILD COMMAND =====');
+            this.outputChannel.appendLine(`🎯 Trigger: ${trigger.name} (ID: ${trigger.id})`);
+            this.outputChannel.appendLine(`📂 Project: ${this.treeDataProvider.selectedProject}`);
+            this.outputChannel.appendLine(`🌍 Region: ${this.treeDataProvider.selectedRegion} (${regionName})`);
+            this.outputChannel.appendLine(`🌿 Branch: ${branchName}`);
+            this.outputChannel.appendLine(`⚙️ Substitutions Count: ${subsCount}`);
+            
+            if (subsCount > 0) {
+                this.outputChannel.appendLine('📋 Substitution Details:');
+                Object.entries(allSubstitutions).forEach(([key, value]) => {
+                    const isDefault = trigger.substitutions && trigger.substitutions.hasOwnProperty(key);
+                    const isUserModified = this.treeDataProvider.substitutions[trigger.id] && this.treeDataProvider.substitutions[trigger.id].hasOwnProperty(key);
+                    let type = 'custom';
+                    if (isDefault && !isUserModified) type = 'default';
+                    if (isDefault && isUserModified) type = 'modified';
+                    
+                    this.outputChannel.appendLine(`   ${key} = ${value} (${type})`);
+                });
+            }
+            
+            // Show detailed command to user
+            let commandPreview = `gcloud builds triggers run ${trigger.id} --project=${this.treeDataProvider.selectedProject}`;
+            if (this.treeDataProvider.selectedRegion !== 'global') {
+                commandPreview += ` --region=${this.treeDataProvider.selectedRegion}`;
+            }
+            commandPreview += ` --branch=${branchName}`;
+            
+            // Add substitutions in correct comma-separated format
+            const subsEntries = Object.entries(allSubstitutions);
+            if (subsEntries.length > 0) {
+                const subsString = subsEntries.map(([k, v]) => `${k}=${v}`).join(',');
+                commandPreview += ` --substitutions=${subsString}`;
+            }
+            
+            this.outputChannel.appendLine('💻 Final Command:');
+            this.outputChannel.appendLine(`   ${commandPreview}`);
+            this.outputChannel.appendLine('===============================================');
+            
+            console.log('🎯 User Command Preview:', commandPreview);
+            
             const result = await this.gcloudService.triggerBuild(
                 trigger.id,
                 this.treeDataProvider.selectedProject,
                 this.treeDataProvider.selectedRegion,
                 branchName, // Use the branch entered by user
-                substitutions
+                allSubstitutions // Use merged substitutions (defaults + user overrides)
             );
             
             let successMessage = `✅ Build triggered successfully! Build ID: ${result.buildId}`;
@@ -264,10 +313,27 @@ class CommandHandlers {
             if (subsCount > 0) {
                 successMessage += ` | ${subsCount} substitution(s)`;
             }
+            successMessage += `\n\n📋 Executed Command:\n${commandPreview}`;
+            
+            // Log success to Extension Host
+            this.outputChannel.appendLine('');
+            this.outputChannel.appendLine('✅ BUILD TRIGGERED SUCCESSFULLY!');
+            this.outputChannel.appendLine(`🆔 Build ID: ${result.buildId}`);
+            this.outputChannel.appendLine(`🕒 Triggered at: ${new Date().toISOString()}`);
+            this.outputChannel.appendLine('===============================================');
+            
             vscode.window.showInformationMessage(successMessage);
             
         } catch (error) {
             console.error('Failed to trigger build:', error);
+            
+            // Log error to Extension Host
+            this.outputChannel.appendLine('');
+            this.outputChannel.appendLine('❌ BUILD TRIGGER FAILED!');
+            this.outputChannel.appendLine(`🚨 Error: ${error.message}`);
+            this.outputChannel.appendLine(`🕒 Failed at: ${new Date().toISOString()}`);
+            this.outputChannel.appendLine('===============================================');
+            
             vscode.window.showErrorMessage(`Failed to trigger build: ${error.message}`);
         }
     }
