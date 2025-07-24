@@ -55,6 +55,14 @@ class GoogleCloudBuildTreeDataProvider {
             return this.getUnpinnedTriggerItems();
         }
         
+        if (element.contextValue === 'activeBuildsGroup') {
+            return this.getActiveBuildItems();
+        }
+        
+        if (element.contextValue === 'recentBuildsGroup') {
+            return this.getRecentBuildItems();
+        }
+        
         if (element.contextValue === 'trigger') {
             return this.getSubstitutionItems(element.triggerId);
         }
