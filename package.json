@@ -173,6 +173,16 @@
           "command": "googleCloudBuild.clearAllPins",
           "when": "view == googleCloudBuildTree && viewItem == triggersGroup",
           "group": "context"
+        },
+        {
+          "command": "googleCloudBuild.viewBuildLogs",
+          "when": "view == googleCloudBuildTree && viewItem == recentBuild",
+          "group": "inline"
+        },
+        {
+          "command": "googleCloudBuild.stopBuildMonitoring",
+          "when": "view == googleCloudBuildTree && viewItem == activeBuild",
+          "group": "inline"
         }
       ]
     }
