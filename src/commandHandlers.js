@@ -49,23 +49,42 @@ class CommandHandlers {
                 // Auto-load projects after authentication
                 await this.loadProjects();
                 
-                // If project was previously selected, auto-load triggers
+                // If project was previously selected, auto-load triggers and builds
                 if (this.treeDataProvider.selectedProject) {
                     console.log(`🔄 Auto-loading triggers for previously selected project: ${this.treeDataProvider.selectedProject}`);
                     await this.loadTriggers();
+                    await this.loadRecentBuilds();
                 }
                 
             } else {
                 this.treeDataProvider.setAuthStatus(null);
                 this.treeDataProvider.setProjects([]);
                 this.treeDataProvider.setTriggers([]);
-                vscode.window.showWarningMessage('❌ Not authenticated. Run: gcloud auth application-default login');
+                this.treeDataProvider.setRecentBuilds([]);
+                
+                // Improved error message based on the specific auth issue
+                const { details } = authResult;
+                let errorMessage = '❌ Authentication Failed';
+                let commandSuggestion = '';
+                
+                if (!details.regularAuth) {
+                    errorMessage += ' - No active gcloud auth';
+                    commandSuggestion = 'Run: gcloud auth login';
+                } else if (!details.applicationDefaultCredentials) {
+                    errorMessage += ' - Missing application default credentials';
+                    commandSuggestion = 'Run: gcloud auth application-default login';
+                } else {
+                    commandSuggestion = 'Run: gcloud auth login and gcloud auth application-default login';
+                }
+                
+                vscode.window.showWarningMessage(`${errorMessage}\n${commandSuggestion}`);
             }
         } catch (error) {
             console.error('Authentication check failed:', error);
             this.treeDataProvider.setAuthStatus(null);
             this.treeDataProvider.setProjects([]);
             this.treeDataProvider.setTriggers([]);
+            this.treeDataProvider.setRecentBuilds([]);
             vscode.window.showErrorMessage(`Authentication check failed: ${error.message}`);
         }
     }
