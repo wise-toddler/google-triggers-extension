@@ -3,7 +3,7 @@
   "name": "google-cloud-build-extension",
   "displayName": "Google Cloud Build Triggers - Pin & Organize",
   "description": "Manage Google Cloud Build triggers directly from VSCode/Cursor with pinning, auto-sync, and multi-region support",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.60.0"
   },
