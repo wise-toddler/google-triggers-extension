@@ -357,6 +357,138 @@ class GoogleCloudBuildTreeDataProvider {
     isPinned(triggerId) {
         return this.pinManager.isPinned(triggerId);
     }
+
+    // Build status tracking methods
+    async setRecentBuilds(builds) {
+        this.recentBuilds = builds || [];
+        this.refresh();
+    }
+
+    // Start monitoring a build
+    startBuildMonitoring(buildId, projectId, region, onStatusUpdate) {
+        if (this.activeBuilds.has(buildId)) {
+            return; // Already monitoring
+        }
+
+        console.log(`🔍 Starting monitoring for build: ${buildId}`);
+        
+        const monitorPromise = this.gcloudService.monitorBuild(
+            buildId, 
+            projectId, 
+            region, 
+            (status) => {
+                console.log(`📊 Build ${buildId} status: ${status.status}`);
+                onStatusUpdate(status);
+                this.refresh(); // Update tree view
+            }
+        );
+
+        this.activeBuilds.set(buildId, {
+            promise: monitorPromise,
+            projectId,
+            region,
+            startTime: new Date()
+        });
+
+        // Clean up after monitoring completes
+        monitorPromise.finally(() => {
+            this.activeBuilds.delete(buildId);
+            console.log(`✅ Stopped monitoring build: ${buildId}`);
+        });
+
+        return monitorPromise;
+    }
+
+    // Stop monitoring a specific build
+    stopBuildMonitoring(buildId) {
+        if (this.activeBuilds.has(buildId)) {
+            this.activeBuilds.delete(buildId);
+            console.log(`🛑 Manually stopped monitoring build: ${buildId}`);
+        }
+    }
+
+    // Get builds section for tree view
+    getBuildsItems() {
+        const items = [];
+        
+        // Active builds section
+        if (this.activeBuilds.size > 0) {
+            const activeBuildsItem = new vscode.TreeItem(
+                `🔄 Active Builds (${this.activeBuilds.size})`,
+                vscode.TreeItemCollapsibleState.Expanded
+            );
+            activeBuildsItem.contextValue = 'activeBuildsGroup';
+            items.push(activeBuildsItem);
+        }
+
+        // Recent builds section
+        if (this.recentBuilds.length > 0) {
+            const recentBuildsItem = new vscode.TreeItem(
+                `📊 Recent Builds (${this.recentBuilds.length})`,
+                vscode.TreeItemCollapsibleState.Collapsed
+            );
+            recentBuildsItem.contextValue = 'recentBuildsGroup';
+            items.push(recentBuildsItem);
+        }
+
+        return items;
+    }
+
+    // Get active build items
+    getActiveBuildItems() {
+        const items = [];
+        
+        for (const [buildId, buildInfo] of this.activeBuilds) {
+            const duration = Math.floor((new Date() - buildInfo.startTime) / 1000);
+            const item = new vscode.TreeItem(
+                `🔄 ${buildId} (${duration}s)`,
+                vscode.TreeItemCollapsibleState.None
+            );
+            item.contextValue = 'activeBuild';
+            item.buildId = buildId;
+            item.tooltip = `Build ID: ${buildId}\nProject: ${buildInfo.projectId}\nRegion: ${buildInfo.region}\nRunning for: ${duration}s`;
+            items.push(item);
+        }
+        
+        return items;
+    }
+
+    // Get recent build items
+    getRecentBuildItems() {
+        return this.recentBuilds.slice(0, 10).map(build => {
+            const statusIcon = this.getBuildStatusIcon(build.status);
+            const item = new vscode.TreeItem(
+                `${statusIcon} ${build.id} (${build.duration})`,
+                vscode.TreeItemCollapsibleState.None
+            );
+            item.contextValue = 'recentBuild';
+            item.buildId = build.id;
+            item.buildStatus = build.status;
+            item.tooltip = `Build: ${build.id}\nStatus: ${build.status}\nTrigger: ${build.triggerName}\nBranch: ${build.branch}\nCommit: ${build.sourceProvenanceHash}\nDuration: ${build.duration}`;
+            
+            // Add command to view logs
+            item.command = {
+                command: 'googleCloudBuild.viewBuildLogs',
+                title: 'View Build Logs',
+                arguments: [build]
+            };
+            
+            return item;
+        });
+    }
+
+    // Get build status icon
+    getBuildStatusIcon(status) {
+        switch (status) {
+            case 'SUCCESS': return '✅';
+            case 'FAILURE': return '❌';
+            case 'WORKING': return '🔄';
+            case 'QUEUED': return '⏳';
+            case 'TIMEOUT': return '⏱️';
+            case 'CANCELLED': return '🚫';
+            default: return '❓';
+        }
+    }
 }
 
 module.exports = GoogleCloudBuildTreeDataProvider;
