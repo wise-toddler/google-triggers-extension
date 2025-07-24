@@ -85,6 +85,21 @@
         "command": "googleCloudBuild.openWebPanel",
         "title": "Open Build Panel",
         "icon": "$(browser)"
+      },
+      {
+        "command": "googleCloudBuild.viewBuildLogs",
+        "title": "View Build Logs",
+        "icon": "$(output)"
+      },
+      {
+        "command": "googleCloudBuild.refreshBuilds",
+        "title": "Refresh Builds",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "googleCloudBuild.stopBuildMonitoring",
+        "title": "Stop Monitoring",
+        "icon": "$(stop)"
       }
     ],
     "viewsContainers": {
